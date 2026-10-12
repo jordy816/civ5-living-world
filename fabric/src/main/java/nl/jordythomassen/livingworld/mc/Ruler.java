@@ -89,9 +89,9 @@ final class Ruler {
 		final List<UUID> soldiers = new ArrayList<>();
 		/** What a soldier of this unit is, as the game's own entity data with the place left open (see stepOut). */
 		String soldier = "";
-		/** Soldiers that have yet to step out: they come one at a time, the next when the one before is beaten or has had his chance. */
+		/** Soldiers that have yet to step out: they come one at a time, the next only when the one before is beaten. */
 		int waiting;
-		/** How many checks the one that is out has been out. */
+		/** How many checks nobody has been out: the ruler gets two seconds to breathe before the next one comes. */
 		int since;
 		int beaten;
 		/** Since when (in checks) the ruler has been out of the soldiers' reach. */
@@ -574,10 +574,13 @@ final class Ruler {
 				mob.setTarget(player);
 			}
 		}
-		fight.since++;
-		if (fight.waiting > 0 && near && there && (fight.soldiers.isEmpty() || fight.since >= 16)) {
-			// The next one: when the one before is beaten, or has had eight seconds to himself.
+		if (fight.soldiers.isEmpty() && fight.waiting > 0 && near && there && ++fight.since >= 4) {
+			// The next one, two seconds after the one before fell. Never two at once: with the next one on a timer a
+			// ruler who was slow with the first had three on them, and fell.
 			send(level, fight, player);
+		}
+		if (fight.soldiers.isEmpty() && fight.waiting > 0 && near && there) {
+			return true;
 		}
 		if (fight.soldiers.isEmpty() && fight.waiting <= 0) {
 			// All of them beaten: this unit has had its fight for the turn. (Lost some other way, they can be met again;

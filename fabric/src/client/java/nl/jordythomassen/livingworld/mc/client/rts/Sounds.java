@@ -132,7 +132,7 @@ final class Sounds {
 				}
 				case WorldEvent.CityAppeared e -> {
 					if (e.city().key().owner() == me) {
-						at(model, e.city().at(), sound("block.bell.use"), 0.9f, 0.8f);
+						at(model, e.city().at(), sound("block.bell.use"), 0.6f, 0.8f);
 					}
 				}
 				case WorldEvent.CityChanged e -> {
@@ -141,7 +141,7 @@ final class Sounds {
 						continue;
 					}
 					if (!city.wonders().equals(e.before().wonders()) && city.wonders().size() > e.before().wonders().size()) {
-						ui("ui.toast.challenge_complete", 0.5f, 1.0f);
+						ui("ui.toast.challenge_complete", 0.4f, 1.0f);
 					} else if (!built && city.buildings().size() > e.before().buildings().size()) {
 						built = true;
 						at(model, city.at(), sound("block.anvil.use"), 0.45f, 1.1f);

@@ -85,7 +85,7 @@ the detail, [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md) what is missi
 | Tests | 123: the engine plays real games through the same interface the mod uses (a 150-turn game, a war and a peace, deals the AI accepts and refuses, a religion founded, a city taken by assault, an air strike, a nuclear strike, a game won, a game lost, a save and reload, a game for several people, the Shoshone, a ruler's own fights and their limits) |
 | A Minecraft server, no screen | 63 checks: a game is started, drawn, and played through the code a player's clicks reach; soldiers step out to meet a ruler on foot and one beaten costs their unit health; a second game in the same world; a game for two. On Linux and on Windows 11 |
 | The real Minecraft client | Every screen clicked through with real mouse and keyboard events, alone and with two clients on one server, on Linux and on Windows |
-| People | One player, a few sessions on a real graphics card. **A whole evening with several people has not happened yet**: expect rough edges and tell us |
+| People | One player, a few sessions on a real graphics card and one evening on a server. **A whole evening with several people has not happened yet**, nobody has fought the soldiers by hand, and the sounds were measured in a recording, not heard: expect rough edges and tell us |
 
 ## Build from source
 

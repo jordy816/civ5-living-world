@@ -111,16 +111,23 @@ A ruler in person, new in 0.2.0 and so the least played part:
   that stays under water becomes a drowned one (it is still the same soldier). What a unit is
   shown as when that creature cannot fight on foot (a ghast, a creeper, a shulker) is stood in
   for by a zombie or a skeleton.
-- **How hard a fight is has been set by reckoning, not by playing.** A soldier of an early
-  unit falls to three blows of a wooden sword and takes about a heart a blow; later armies
-  want the arms a governor sells. One person fought them with real mouse and keys once, and
-  lost. Expect the numbers to change.
+- **How hard a fight is has been set by reckoning and by a scripted hand, not by a person.**
+  A soldier of an early unit falls to three blows of a wooden sword and takes about a heart a
+  blow; later armies want the arms a governor sells. Tried with real mouse and key events: with
+  three soldiers at once the ruler fell in ten seconds; with the next one coming on a timer a
+  hand that aims by the red of a soldier's name beat one and fell to the two that followed;
+  since the next soldier comes only when the one before is beaten, that same hand (it misses
+  most of its swings) beat all three of a Warrior's with the wooden sword and the leather a
+  ruler starts with, and had a heart and a half left. So an early fight is close without
+  better arms. No person has fought them yet: expect the numbers to change.
 - **The Shoshone** have their wide borders, their strength on their own land, the Pathfinder
   and the Comanche Riders. The Pathfinder does not choose what it finds in a ruin (Unciv has
   no rule for that).
-- **The sounds have not been heard.** The machines the client is tested on have no sound
-  card. Every sound is one of Minecraft's own and its name was checked against the game's
-  list; how loud and how many is a guess until somebody plays with the sound on.
+- **The sounds have been measured, not heard.** The machines the client is tested on have no
+  sound card, so the game's sound engine was made to write to a file, and the file looked at:
+  a bell when a city is founded, a hammer for a building, a long chime for a wonder, a soft
+  bell when the turn passes, a horn for war, each at its moment and silence between. Whether
+  that is pleasant, too loud or too much is for somebody with the sound on to say.
 - **The sketch of a kind of map** on the table is a drawing of its shape, not the map the game
   will make.
 
