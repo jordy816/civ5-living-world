@@ -44,7 +44,7 @@ and the keys.
 - **A whole game of Civilization**: found cities, research, build, grow, explore, fight, make
   deals, friends and enemies, choose your gods, send spies, win or fall. Up to seven other
   civilizations and twelve city-states, eight difficulty levels, four game lengths, ten kinds
-  of map.
+  of map. Unciv's civilizations, and the Shoshone besides.
 - **Seen from above, as a strategy game**: the Minecraft world at an angle from above with the
   mouse as a pointer, and around it what Civilization V has around its map: the realm's
   numbers along the top, research top left, the selected unit and its orders bottom left, the
@@ -52,8 +52,9 @@ and the keys.
   right click sends.
 - **Numbers and pictures, not walls of text**: every measure has one small picture, the same
   everywhere; a list says in brief what each choice gives; the technologies and the social
-  policies are trees in which you see what leads to what; an attack is foretold before it is
-  made.
+  policies are trees in which you see what leads to what; a city in detail is a sheet of bars
+  and numbers; an attack is foretold before it is made. News is a column of small pictures:
+  a click goes to where it happened.
 - **With others, each their own civilization**: everybody moves at once; two players at war
   move one after the other; the computer plays for whoever is away; a newcomer takes over a
   civilization or looks on ([docs/MULTIPLAYER.md](docs/MULTIPLAYER.md)).
@@ -62,10 +63,16 @@ and the keys.
   is a town of blocks that changes with the ages, from thatched huts to glass towers.
 - **Wonders you can see**: every wonder of the world stands on a hex of its own beside its
   city, many times the size of a house: the Pyramids, Stonehenge, a colossus of copper.
-- **And on foot when you like**: F12 sets you down on the land. Your hands work your own land
-  only: fell its trees, reap its fields, mine its hills, and carry what you gather to a city,
-  where it becomes production, food or gold (never more in a turn than the city makes itself).
-  Bread heals your soldiers, and the bell in the hall ends the turn.
+- **And on foot when you like**: F12 sets you down where you point, on your own land. Your
+  hands work your own land only: fell its trees, reap its fields, mine its hills, and carry
+  what you gather to a city, where it becomes production, food or gold (never more in a turn
+  than the city makes itself). Bread heals your soldiers, and the bell in the hall ends the
+  turn.
+- **A ruler in person**: an enemy unit you come near sends its soldiers at you, one after the
+  other; each one you beat costs that unit health in the game. Fall, and your people carry you
+  home for a tenth of the treasury. Governors sell arms your people know how to make.
+- **A lobby**: first the game (the land with a sketch of its shape, the rules), then who
+  plays: everybody picks a civilization, says ready, and the keeper begins.
 - **Nothing to type**: everything is a button, a list or a place on the map.
 
 ## How far it has been tried
@@ -75,8 +82,8 @@ the detail, [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md) what is missi
 
 | Level | What ran |
 |---|---|
-| Tests | 118: the engine plays real games through the same interface the mod uses (a 150-turn game, a war and a peace, deals the AI accepts and refuses, a religion founded, a city taken by assault, an air strike, a nuclear strike, a game won, a game lost, a save and reload, a game for several people) |
-| A Minecraft server, no screen | 56 checks: a game is started, drawn, and played through the code a player's clicks reach; a second game in the same world; a game for two. On Linux and on Windows 11 |
+| Tests | 123: the engine plays real games through the same interface the mod uses (a 150-turn game, a war and a peace, deals the AI accepts and refuses, a religion founded, a city taken by assault, an air strike, a nuclear strike, a game won, a game lost, a save and reload, a game for several people, the Shoshone, a ruler's own fights and their limits) |
+| A Minecraft server, no screen | 63 checks: a game is started, drawn, and played through the code a player's clicks reach; soldiers step out to meet a ruler on foot and one beaten costs their unit health; a second game in the same world; a game for two. On Linux and on Windows 11 |
 | The real Minecraft client | Every screen clicked through with real mouse and keyboard events, alone and with two clients on one server, on Linux and on Windows |
 | People | One player, a few sessions on a real graphics card. **A whole evening with several people has not happened yet**: expect rough edges and tell us |
 
@@ -86,9 +93,9 @@ Needs JDK 25 and a few GB of memory for the first build (it downloads Minecraft 
 
 ```bash
 scripts/dev/fetch-unciv.sh                   # once: the engine, into libs/ (not in git; checksum checked)
-./gradlew :bridge:test :engine:test          # 118 tests, no Minecraft needed
+./gradlew :bridge:test :engine:test          # 123 tests, no Minecraft needed
 ./gradlew :fabric:build                      # the mod jar in fabric/build/libs
-./gradlew :fabric:runServer -Dlivingworld.selftest=true --args=nogui   # 56 checks on a real server
+./gradlew :fabric:runServer -Dlivingworld.selftest=true --args=nogui   # 63 checks on a real server
 scripts/dev/prod-client.sh start             # Linux: the real client on a virtual screen (see the script)
 ```
 

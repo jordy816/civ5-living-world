@@ -13,14 +13,30 @@ What has been tried, and how, is in [TESTING.md](TESTING.md).
 
 Start the instance (Start menu or desktop, *Civ V Living World*). The world opens by itself.
 
-**The first time, a table to set the game up at.** On the left every civilization: point at
-one to read who leads it, what its gift is and what only its people build or train; click to
-lead it (or leave it at *Any*). On the right the game: the shape and size of the land, its
-length, the difficulty, how many civilizations the computer plays, city-states, barbarians,
-ancient ruins, nuclear weapons, one city each, and which ways of winning count. *Begin the
-game* makes the world; you then look down at your Settler and your Warrior.
+**The first time, a table to set the game up at**, in two steps shown along the top.
 
-![The table a game is set up at](img/rts-lobby.png)
+1. **The game.** On the left the world: a sketch of what each kind of land looks like (one
+   continent, islands, a sea in the middle), its name between two arrows, a line on what it
+   means for a game, and the size. On the right the rules: the length, the difficulty, how many
+   civilizations the computer plays, city-states, barbarians, ancient ruins, spies, nuclear
+   weapons, one city each, and which ways of winning count. *Next: who plays* goes on.
+2. **Who plays.** On the left every civilization: point at one to see who leads it, its gift
+   as a few points, and what only its people build or train, each with its numbers; click to
+   lead it (or leave it at *Any*). On the right the game in short and who is at the table.
+   *Begin the game* makes the world; you then look down at your Settler and your Warrior.
+   *Change the game* goes back a step.
+
+| The game | Who plays |
+|---|---|
+| ![The world with a sketch of its shape, and the rules](img/rts-lobby-game.png) | ![The civilizations, the one looked at in parts, and who is at the table](img/rts-lobby.png) |
+
+With others at the table everybody says *I am ready* in the second step, and the game begins
+on a count of three (see [MULTIPLAYER.md](MULTIPLAYER.md)).
+
+Besides Unciv's own civilizations there is one this mod adds: **the Shoshone** under
+Pocatello. Their cities begin with eight hexes more than anybody's, their soldiers fight 15%
+stronger on their own land, the Pathfinder is their Scout and the Comanche Riders their
+Cavalry.
 
 **After that**, the game you were playing is there again (it is saved after every turn), behind
 a page with *Continue*, *A new game...* and who plays. Enter continues. The same page is
@@ -51,7 +67,7 @@ Around it, where Civilization V has them:
 | Along the top | Science a turn, gold (and what a turn brings), happiness, the golden age your spare happiness saves up for, culture towards the next policy, faith (and what the next pantheon or prophet takes), the strategic resources you have to spare and how many kinds of luxury; the turn and the year. Point at any of them to read what it is; click for the page behind it |
 | Top left | What your scholars research and how long it takes. Click to choose |
 | Top right | What each hex yields, the known world on one map, the tree of technologies, policies, faith and religion, the ways to win, who plays, the other civilizations, your cities and units, settings, walking (see below); proposals when somebody has put something to you, and a golden apple when a Great Person is yours for the choosing |
-| Right | News: what was founded, taken, met, finished |
+| Right | News as small pictures: click one to go there, right-click to put it away |
 | Bottom left | The unit you selected: what it is, its moves, strength and health, and a button for everything it can do right here |
 | Bottom right | The small map (click it to go there) and, above it, the **turn button** |
 | On the land | Whose land is whose: a wash of the owner's colour with a broad band of it along the border, and land you have seen but do not see now a shade darker. A banner over every city (size, name, what it builds and in how many turns), a flag over every unit with a gold pip for each promotion, a picture on every resource, the hex grid |
@@ -107,13 +123,20 @@ turn ends anyway); and when nothing is left, *Next turn*.
 line chooses it, and so does its number (1 to 9). **Every line says what it is and does**: the
 first of it under its name, all of it on a card when you point at the line (what a building
 gives and costs to keep, how strong a unit is and what it can do, what a technology makes
-possible). Under a city's list: *Details* (what the city makes, when it grows and when its
-border does, what stands in it; from there a building can be sold), *Faith* (what faith buys
+possible). Under a city's list: *Details* (the city as a sheet: what it makes a turn as six
+numbers, three bars with the turns left until it grows, finishes what it builds and widens its
+border, its walls, and every building with its picture, what it gives and what it costs to
+keep; from there a building can be sold), *Faith* (what faith buys
 there), *Line up* (what you choose next is built after what the city builds now, one after the
 other; the top of the list says what is lined up), *Buy with gold* and *City affairs* for
 everything else.
 
-![What Rome can build](img/rts-production.png)
+| What Rome can build | Rome in detail |
+|---|---|
+| ![The production list](img/rts-production.png) | ![A city as a sheet of numbers and bars](img/rts-city-sheet.png) |
+
+The banner over a city says what it builds and **how many turns are left**, one less every
+turn.
 
 **Who works where.** While a city's list is up, every hex its citizens can work carries a
 small mark: green with a head is worked, dark is free. Click a free one and a citizen works
@@ -240,8 +263,13 @@ line at the bottom says how much is still to come.
 
 ## Walking the land
 
-**F12** (or the boots, top right) sets you down on the land in the middle of your view, in
-your own person; F12 again lifts you back up. Down there the game is Minecraft: walk through
+**F12** sets you down on the land **where the pointer is**, in your own person; F12 again
+lifts you back up. **A ruler is set down on their own land only**: point beyond your borders
+and you land on the nearest hex that is yours (before your first city: beside one of your
+units). Beyond your borders you walk. While you rule from above, your figure stands where you
+last walked, in your own likeness, for everybody to see; a gold *YOU* marks it on the land
+and on the small map, and with the pointer on a panel (or the boots, top right) F12 sets you
+down there. Down there the game is Minecraft: walk through
 your cities, fell trees, carry what the land yields to a city, eat, sleep. The corner of the
 screen says whose land you stand on (*YOUR LAND*, *NOBODY'S LAND*, *LAND OF GREECE*, the name
 of a city or a wonder) and what the thing in your hand is good for; for a few seconds after
@@ -265,7 +293,7 @@ it to one of your cities (the governor: *Deliver what you carry*) and the city u
 | Raw iron | 3 Production each |
 | Raw copper, coal | 2 Production each |
 | Wheat, melon, berries, apples | 1 Food each |
-| Pumpkin | 2 Food each |
+| Pumpkin, fish | 2 Food each |
 | Raw gold, gold ingots | 4 Gold each |
 | Emeralds | 6 Gold each |
 
@@ -273,6 +301,38 @@ Hands help a city along; they do not do its work for it. A city takes from you n
 Production in a turn than it makes itself (but always 6), no more Food than 2 and one for
 every citizen, and 10 Gold. What it cannot take stays in your pack. Ore needs the pickaxe
 your people know how to make, so gold from the hills comes with Iron Working.
+
+**An enemy unit you come near sends its soldiers at you.** Units at war with you, and
+barbarians, are armies; within twenty blocks of one, up to three of its soldiers step out, one
+after the other: life-size, the creature their unit is, as strong as their unit is, and with a
+will of their own. They follow you, but never further than a hex or two from their unit, and
+they fall back when you leave. Every soldier you beat costs the unit 20 health in the game
+itself (a unit at its last falls, and what it carried is yours: a few gold). It is help, not a
+war won by hand: a unit loses at most 60 health to you in a turn, all units together 150. Only
+soldiers on land fight this way; workers, ships and aircraft do not.
+
+![A soldier of an enemy Warrior beaten: the chat says what it cost the unit, and the next one is on his way](img/foot-soldiers.png)
+
+**If you fall, your people carry you home**: you stand before your capital again, your arms
+and armour still yours. It costs a tenth of your treasury (100 gold at most) and whatever you
+were carrying for your cities.
+
+**Arms for yourself.** You come down the first time in leather in your colours, with a wooden
+sword. The governor of any of your cities sells better, for gold from the treasury, as soon as
+your people know how to make it:
+
+| | Needs | Gold |
+|---|---|---|
+| A fishing rod (fish from your own shore is Food for a city) | Sailing | 15 |
+| A bow and 32 arrows | Archery | 30 |
+| Bronze arms: sword and armour of copper | Bronze Working | 40 |
+| Iron arms: sword, armour and a shield | Iron Working | 100 |
+| Steel arms: the best steel | Steel | 200 |
+| Arms of the new age | Rifling | 350 |
+| Training: one heart more, for good, five times | | 60, 120, 180, 240, 300 |
+
+An explosion breaks blocks on the land of whoever set it off, and nowhere else; a fire burns
+where it was lit and does not spread.
 
 - **Right-click a unit of yours** to select it; its menu lists what it can do where it stands.
 - **With a unit selected and the Codex in hand**, a green ring marks every hex it can reach, a
@@ -500,7 +560,24 @@ however long you hold the button.
 
 Founded, captured and lost cities, finished wonders, war and peace, a new technology or era,
 what your units met and what happened to them, proposals waiting, and the end of the game
-(somebody's victory, or your fall) come as news on the right of the screen, and as lines in chat. After a victory you can play on.
+(somebody's victory, or your fall) come as news. From above that is **a column of small
+pictures down the right side**, one for each piece, by what kind it is (a sword for war, a
+bell for a city, a pickaxe for something built, a bottle for a discovery). A new one says its
+words beside it for a few seconds and then keeps quiet; point at it to read it again.
+**Click** one and the view goes to the place it is about and opens what deals with it (the
+city, the tree of technologies, the policies, the proposals); **right-click** puts it away,
+and the small *x* under the column puts all away. A word on what you just did yourself
+(*Rome has new orders*) passes along the bottom of the screen and is gone. **N** lists all of
+it, the newest first. On foot the news comes as lines in chat. After a victory you can play
+on.
+
+![News as small pictures down the right side; the newest says its words](img/rts-news.png)
+
+**What you hear.** A unit that walks, one that is hurt and one that falls sound like the
+creature they are; a city founded rings a bell, something built is a hammer on an anvil, a
+discovery, a wonder and the horn of war have their own. They are few: of everything that
+happened between two turns you hear the nearest, louder the nearer it is to what you look at;
+on foot only what is close by.
 
 ## Settings
 

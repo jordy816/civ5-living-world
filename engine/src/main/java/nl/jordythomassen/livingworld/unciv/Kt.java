@@ -28,6 +28,18 @@ public final class Kt {
 	 * property and a function of the same name that differ only in their type; Java source cannot
 	 * say which of the two it means.
 	 */
+	/** A private field of one of Unciv's objects, where it has no way of asking for it; null when it is not there. */
+	public static <T> T field(Object target, String name, Class<T> type) {
+		try {
+			java.lang.reflect.Field field = target.getClass().getDeclaredField(name);
+			field.setAccessible(true);
+			Object value = field.get(target);
+			return type.isInstance(value) ? type.cast(value) : null;
+		} catch (ReflectiveOperationException | RuntimeException e) {
+			return null;
+		}
+	}
+
 	@SuppressWarnings("unchecked")
 	public static <T> T get(Object target, String name, Class<T> returns) {
 		String key = target.getClass().getName() + "#" + name + "#" + returns.getName();

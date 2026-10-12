@@ -406,7 +406,7 @@ public final class UncivSnapshot {
 				type = (construction instanceof BaseUnit ? "UNIT_" : "BUILDING_") + Names.key(current);
 				done = constructions.getWorkDone(current);
 				needed = real.getProductionCost(city.getCiv(), city);
-				turns = constructions.turnsToConstruction(current, false);
+				turns = constructions.turnsToConstruction(current, true);
 			} else if (current != null && !current.isEmpty() && !current.equals("Nothing")) {
 				// Turning production into gold or science: something is chosen, nothing is being built.
 				name = current;

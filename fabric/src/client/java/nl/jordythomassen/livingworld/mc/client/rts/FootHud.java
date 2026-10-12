@@ -105,7 +105,7 @@ public final class FootHud {
 			CivInfo owner = there.owner() < 0 ? null : state.civ(there.owner());
 			if (city != null && city.key().owner() == me) {
 				title = city.name().toUpperCase(Locale.ROOT);
-				hint = "Bell: end turn   Lectern: research   Governor: the city";
+				hint = "Bell: end turn   Lectern: research   Governor: the city, and arms";
 				color = GOLD;
 				picture = "bell";
 			} else if (city != null) {
@@ -162,6 +162,8 @@ public final class FootHud {
 			lines.add(line("At a city: logs +2 Production   wheat +1 Food   gold +4 Gold", DIM));
 			pictures.add("bread");
 			lines.add(line("Bread heals a unit", DIM));
+			pictures.add("iron_sword");
+			lines.add(line("Near an enemy unit its soldiers come at you", DIM));
 			pictures.add("book");
 			lines.add(line("The Codex does all the rest   F12: back above", DIM));
 		}

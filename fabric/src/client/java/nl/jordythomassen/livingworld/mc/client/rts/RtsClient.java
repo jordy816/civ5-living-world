@@ -30,9 +30,15 @@ import nl.jordythomassen.livingworld.state.WorldState;
  * the game itself.
  */
 public final class RtsClient {
-	/** A line of news and when it came (in ticks of this client). */
-	public record Notice(String text, long at) {
+	/**
+	 * A piece of news: what kind it is (the picture it gets and where a click on it leads), the hex it is about (or
+	 * null), its words, when it came (in ticks of this client) and in which turn.
+	 */
+	public record Notice(String kind, PlotCoord place, String text, long at, int turn) {
 	}
+
+	/** The hex the pointer rests on, when it is on the land and not on a panel: where F12 sets the player down. */
+	static PlotCoord pointed;
 
 	static WorldState state;
 	static BoardModel model;
@@ -470,8 +476,12 @@ public final class RtsClient {
 			// The same layout the server paints the land with: the middle of the map on the block origin.
 			McLayout layout = new McLayout(width, -fresh.session().grid().width() * width / 2.0, fresh.session().grid().height() * (width * Math.sqrt(3.0) / 2.0) / 2.0);
 			boolean otherGame = state == null || !state.session().gameId().equals(fresh.session().gameId());
+			WorldState before = state;
 			state = fresh;
 			model = new BoardModel(fresh, layout);
+			if (!otherGame) {
+				Sounds.changed(before, fresh, model);
+			}
 			spots = UnitSpots.of(fresh, model);
 			if (otherGame) {
 				RtsCamera.focusSet = false;
@@ -510,9 +520,12 @@ public final class RtsClient {
 		}
 	}
 
-	/** Down to the land, to walk it: onto the hex in the middle of the view. */
+	/**
+	 * Down to the land, to walk it: onto the hex the pointer rests on (the server sets a ruler down on their own land
+	 * only, the nearest to it), or with the pointer on a panel, where the player's own figure stands.
+	 */
 	static void walk() {
-		PlotCoord middle = model == null ? null : model.plotAt((int) Math.floor(RtsCamera.focusX), (int) Math.floor(RtsCamera.focusZ));
+		PlotCoord middle = enabled ? pointed : null;
 		act("mode", 0, 0, middle == null ? -1 : middle.x(), middle == null ? -1 : middle.y(), "");
 		// Let go of the player at once: the server is about to set them down, and a view that went on holding them
 		// up for even one more tick would have them fall from the sky.
@@ -525,9 +538,27 @@ public final class RtsClient {
 	private static void onView(Net.View payload) {
 		try {
 			RtsView fresh = RtsView.read(payload.data());
-			for (String text : fresh.notices) {
-				notices.addFirst(new Notice(text, ticks));
+			for (String told : fresh.notices) {
+				// kind | x | y | the words (see RtsView.notices)
+				String[] parts = told.split("\\|", 4);
+				String kind = parts.length == 4 ? parts[0] : "news";
+				String text = parts.length == 4 ? parts[3] : told;
+				PlotCoord place = null;
+				try {
+					place = parts.length == 4 && Integer.parseInt(parts[1]) >= 0 ? new PlotCoord(Integer.parseInt(parts[1]), Integer.parseInt(parts[2])) : null;
+				} catch (NumberFormatException e) {
+					// News without a place.
+				}
 				log.addFirst((state == null ? "" : "Turn " + state.turn() + ":  ") + text);
+				// The same thing said twice in a row is shown once.
+				Notice last = notices.peekFirst();
+				if (kind.equals("turn") || (last != null && last.text().equals(text) && ticks - last.at() < 200)) {
+					continue;
+				}
+				notices.addFirst(new Notice(kind, place, text, ticks, state == null ? 0 : state.turn()));
+				if (enabled) {
+					Sounds.news(kind);
+				}
 			}
 			while (log.size() > 200) {
 				log.removeLast();

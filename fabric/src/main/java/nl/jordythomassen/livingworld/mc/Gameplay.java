@@ -128,6 +128,10 @@ final class Gameplay {
 			if (session.builtin) {
 				menu.button("Deliver what you carry", "Wood and ore: Production. Wheat and fruit: Food. Gold and gems: Gold. " + city.name()
 					+ " takes no more a turn than it makes itself", p -> session.deliver(p, key));
+				if (!session.rts.isAbove(player)) {
+					menu.button("Arms for yourself", "Buy a sword and armour your people know how to make, or train: for when an enemy comes at you in person",
+						p -> session.ruler.armsMenu(p, civ == null ? 0xE0B040 : civ.color()));
+				}
 			} else {
 				menu.button("Deliver logs", "1 log = " + LivingWorldServer.HAMMERS_PER_LOG + " hammers, up to " + LivingWorldServer.MAX_LOGS
 					+ ". Uses logs from your inventory and adds production in Civilization V", p -> session.deliver(p, key));
@@ -275,7 +279,26 @@ final class Gameplay {
 	 * Each line comes with how it reads (a heading, plain, an aside, good news, bad news).
 	 */
 	void page(ServerPlayer player, String kind, int a, String title, int color) {
-		session.ask(player, kind, a, 0, (who, lines) -> {
+		// From above a city is a sheet that is drawn (bars, pictures), not a page that is read: the same game data, in rows.
+		boolean sheet = kind.equals("cityinfo") && session.rts.isAbove(player);
+		session.ask(player, sheet ? "citysheet" : kind, a, 0, (who, lines) -> {
+			if (sheet && !lines.isEmpty()) {
+				Menus.Builder menu = session.menus.menu(who, title.replace(" in detail", ""), color).kind("citysheet", a);
+				for (Records.Option row : lines) {
+					menu.line(row.type() + "|" + row.group() + "|" + row.id() + "|" + row.turns() + "|" + row.name());
+				}
+				WorldState state = session.state();
+				EntityKey key = state == null ? null : new EntityKey(state.session().viewer(), a);
+				if (key != null && state.cities().containsKey(key)) {
+					menu.columns(2);
+					menu.button("Line up what it builds next", "Something to start on by itself when what it builds now is done", p -> queueMenu(p, key));
+					menu.button("Buy with faith", "Missionaries, prophets and the buildings of your religion", p -> faithMenu(p, key));
+					menu.button("Sell a building", "One a turn, for a part of what it cost", p -> sellMenu(p, key));
+					menu.button("Back to the city", null, p -> cityMenu(p, key));
+				}
+				menu.open();
+				return;
+			}
 			Menus.Builder menu = session.menus.menu(who, title, color);
 			if (lines.isEmpty()) {
 				menu.line("There is nothing to tell yet.");

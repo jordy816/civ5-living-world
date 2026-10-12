@@ -8,6 +8,13 @@ package nl.jordythomassen.livingworld.board;
  * Angles are Minecraft's: yaw 0 looks south (towards +z), pitch 90 straight down.
  */
 public final class Overlook {
+	/**
+	 * The height somebody who looks from above hangs at. The player's own game steers them there
+	 * and the server puts them there: a server that is not the player's own takes a leap of more
+	 * than ten blocks made by the player's game for cheating and puts the player back.
+	 */
+	public static final int HANG_Y = BoardModel.LAND + 36;
+
 	private Overlook() {
 	}
 

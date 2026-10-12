@@ -25,8 +25,10 @@ public final class RtsView {
 	public List<PlotCoord> attack = new ArrayList<>();
 	/** Offers of other civilizations that wait for an answer. */
 	public int proposals;
-	/** News since the last view, oldest first. */
+	/** News since the last view, oldest first: what kind it is, a bar, the hex it is about (x, y; -1 for none), a bar, the words. */
 	public List<String> notices = new ArrayList<>();
+	/** The hex the player's own figure stands on while they rule from above, or null. */
+	public PlotCoord me;
 	/** A hex the view should go to (a unit that waits, a city that fell), or null. */
 	public PlotCoord lookAt;
 	/** How many chunks of land near the players are still to be painted; 0 when the land is all there. */
@@ -74,6 +76,11 @@ public final class RtsView {
 				out.writeInt(lookAt.x());
 				out.writeInt(lookAt.y());
 			}
+			out.writeBoolean(me != null);
+			if (me != null) {
+				out.writeInt(me.x());
+				out.writeInt(me.y());
+			}
 			out.writeInt(painting);
 			out.writeUTF(wait);
 			out.writeInt(seat);
@@ -111,6 +118,9 @@ public final class RtsView {
 		}
 		if (in.readBoolean()) {
 			view.lookAt = new PlotCoord(in.readInt(), in.readInt());
+		}
+		if (in.readBoolean()) {
+			view.me = new PlotCoord(in.readInt(), in.readInt());
 		}
 		view.painting = in.readInt();
 		view.wait = in.readUTF();

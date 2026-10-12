@@ -72,6 +72,8 @@ public final class RtsScreen extends Screen {
 			super.clear();
 		}
 	};
+	/** Places that do something on a right click (a piece of news is put away). */
+	private final List<Zone> rightZones = new ArrayList<>();
 	/** The parts of the screen a panel covers: a click there is never a click on the land behind it. */
 	private final List<int[]> solid = new ArrayList<>();
 	/** Where the list of choices is on the screen, for the wheel; all zero when it is not up. */
@@ -269,6 +271,7 @@ public final class RtsScreen extends Screen {
 		mx = mc.mouseHandler.getScaledXPos(mc.getWindow()) / k;
 		my = mc.mouseHandler.getScaledYPos(mc.getWindow()) / k;
 		zones.clear();
+		rightZones.clear();
 		solid.clear();
 		push(g);
 		if (faultDue) {
@@ -308,6 +311,7 @@ public final class RtsScreen extends Screen {
 		}
 		Zone pointed = zoneAt(mx, my);
 		boolean overPanel = pointed != null || onPanel(mx, my);
+		RtsClient.pointed = overPanel ? null : hover;
 		if (pointed != null && pointed.tip != null && !pointed.tip.isEmpty()) {
 			tip(g, pointed.tip);
 		} else if (!overPanel && hover != null && battleCard(g, state)) {
@@ -818,6 +822,26 @@ public final class RtsScreen extends Screen {
 				}
 			}));
 		}
+		// Where the player's own figure stands, and so where F12 sets them down when nothing else is pointed at.
+		if (view.me != null) {
+			double cx = model.centerX(view.me) + 0.5;
+			double cz = model.centerZ(view.me) + 3.5;
+			project(cx, BoardModel.LAND + 8.0, cz);
+			if (onScreen(point[0], point[1], 30)) {
+				int px = Math.round(point[0]);
+				int py = Math.round(point[1]) - ((RtsClient.ticks / 10) % 2 == 0 ? 1 : 0);
+				int label = font.width("YOU") + 8;
+				g.fill(px - label / 2 - 1, py - 25, px + label / 2 + 1, py - 12, 0xFF1A1206);
+				g.fill(px - label / 2, py - 24, px + label / 2, py - 13, GOLD);
+				g.centeredText(font, "YOU", px, py - 22, 0xFF1A1206);
+				for (int i = 0; i < 5; i++) {
+					g.fill(px - (5 - i), py - 12 + i, px + (5 - i), py - 11 + i, i == 0 ? 0xFF1A1206 : GOLD);
+				}
+				PlotCoord stands = view.me;
+				zones.add(new Zone(px - label / 2 - 1, py - 25, label + 2, 20, "Your own figure stands here.\nF12 sets you down where you point, on your own land; with nothing pointed at, here.",
+					() -> RtsCamera.lookAt(model.centerX(stands) + 0.5, model.centerZ(stands) + 0.5)));
+			}
+		}
 	}
 
 	// ---- the panels ----
@@ -930,7 +954,8 @@ public final class RtsScreen extends Screen {
 		int y = 18;
 		x = button(g, x, y, icon(Items.KNOWLEDGE_BOOK), "How to play: the mouse and the keys (F1)", () -> RtsClient.help(!RtsClient.helpOpen));
 		x = button(g, x, y, icon(Items.COMPARATOR), "Settings, and a new game", () -> RtsClient.act("open", 0, 0, 0, 0, "settings"));
-		x = button(g, x, y, icon(Items.LEATHER_BOOTS), "Walk the land yourself (F12 brings you back up)", RtsClient::walk);
+		x = button(g, x, y, icon(Items.LEATHER_BOOTS), "Walk the land yourself: you are set down where your figure stands.\nF12 with the pointer on your own land sets you down there; F12 again brings you back up",
+			RtsClient::walk);
 		x = button(g, x, y, icon(Items.FILLED_MAP), "Your cities and units", () -> RtsClient.act("open", 0, 0, 0, 0, "realm"));
 		x = button(g, x, y, icon(Items.GLOBE_BANNER_PATTERN), "Other civilizations", () -> RtsClient.act("open", 0, 0, 0, 0, "others"));
 		x = button(g, x, y, icon(Items.PLAYER_HEAD), "Who plays: take a civilization, look on, or begin a new game (L)", () -> RtsClient.act("lobby", 0, 0, 0, 0, "open"));
@@ -981,29 +1006,154 @@ public final class RtsScreen extends Screen {
 		return out;
 	}
 
+	private static String noticeIcon(String kind) {
+		return switch (kind) {
+			case "build" -> "copper_pickaxe";
+			case "wonder" -> "nether_star";
+			case "city" -> "bell";
+			case "war" -> "iron_sword";
+			case "peace" -> "white_banner";
+			case "talk" -> "writable_book";
+			case "trade" -> "emerald";
+			case "unit" -> "iron_helmet";
+			case "faith" -> "feather";
+			case "spy" -> "ender_eye";
+			case "tech" -> "experience_bottle";
+			case "policy" -> "amethyst_shard";
+			case "era" -> "clock";
+			default -> "paper";
+		};
+	}
+
+	/** What a click on a piece of news leads to: the place it is about, and the screen that deals with it. Then it is put away. */
+	private void openNotice(RtsClient.Notice notice) {
+		WorldState state = RtsClient.state;
+		BoardModel model = RtsClient.model;
+		if (notice.place() != null && model != null) {
+			RtsCamera.lookAt(model.centerX(notice.place()) + 0.5, model.centerZ(notice.place()) + 0.5);
+		}
+		switch (notice.kind()) {
+			case "tech" -> openTechTree();
+			case "policy" -> RtsClient.openPolicies();
+			case "talk", "trade", "peace" -> RtsClient.act("open", 0, 0, 0, 0, RtsClient.view.proposals > 0 ? "proposals" : "others");
+			case "spy" -> RtsClient.act("open", 0, 0, 0, 0, "spies");
+			case "faith" -> RtsClient.act("open", 0, 0, 0, 0, "religion");
+			case "build", "city", "wonder" -> {
+				CityState city = state == null || notice.place() == null ? null : state.cityAt(notice.place());
+				if (city != null && city.key().owner() == state.session().viewer()) {
+					openCity(city);
+				}
+			}
+			default -> {
+			}
+		}
+		RtsClient.notices.remove(notice);
+		Sounds.ui("ui.button.click", 0.3f, 1.0f);
+	}
+
+	/**
+	 * The news, down the right side: a small picture for each piece, by what kind it is. A new one says its words
+	 * beside it for a few seconds and then keeps quiet; pointing at one says them again. A click goes to the place
+	 * it is about and opens what deals with it; a right click puts it away. A word on what the player just did
+	 * themselves ("Rome has new orders") is no news: it passes along the bottom and is gone.
+	 */
 	private void news(GuiGraphicsExtractor g) {
-		int width = 170;
-		int x = w - width - 2;
-		int y = 42;
+		WorldState state = RtsClient.state;
+		int size = 18;
+		int x = w - size - 4;
+		int top = 44;
+		int most = Math.max(3, Math.min(8, (h - 190 - top) / (size + 3)));
 		int shown = 0;
-		for (RtsClient.Notice notice : RtsClient.notices) {
+		int more = 0;
+		int spoken = 0;
+		RtsClient.Notice passing = null;
+		for (java.util.Iterator<RtsClient.Notice> it = RtsClient.notices.iterator(); it.hasNext(); ) {
+			RtsClient.Notice notice = it.next();
 			long age = RtsClient.ticks - notice.at();
-			if (age > 500 || shown >= 6) {
-				break;
+			if (notice.kind().equals("news")) {
+				if (age > 110) {
+					it.remove();
+				} else if (passing == null) {
+					passing = notice;
+				}
+				continue;
 			}
-			List<String> lines = wrap(notice.text(), width - 8);
-			if (lines.size() > 3) {
-				lines = lines.subList(0, 3);
+			if (age > 9000 || (state != null && state.turn() - notice.turn() > 3)) {
+				it.remove();
+				continue;
 			}
-			int height = lines.size() * 9 + 5;
-			int alpha = age > 440 ? (int) (0xD0 * (500 - age) / 60.0) : 0xD0;
-			g.fill(x, y, x + width, y + height, (alpha << 24) | 0x101018);
-			g.fill(x, y, x + 2, y + height, ((Math.min(255, alpha + 40)) << 24) | 0xFFD75E);
-			for (int i = 0; i < lines.size(); i++) {
-				g.text(font, lines.get(i), x + 5, y + 3 + i * 9, ((Math.min(255, alpha + 47)) << 24) | 0xFFFFFF, false);
+			if (shown >= most) {
+				more++;
+				continue;
 			}
-			y += height + 2;
+			int y = top + shown * (size + 3);
+			boolean over = mx >= x - 1 && mx < x + size + 1 && my >= y - 1 && my < y + size + 1;
+			boolean fresh = age < 110;
+			int edge = notice.kind().equals("war") ? RED : notice.kind().equals("wonder") || notice.kind().equals("era") ? GOLD : BORDER;
+			g.fill(x - 1, y - 1, x + size + 1, y + size + 1, over ? WHITE : fresh && (RtsClient.ticks / 5) % 2 == 0 ? GOLD : edge);
+			g.fill(x, y, x + size, y + size, over ? PANEL_LIGHT : 0xF0141420);
+			item(g, icon(noticeIcon(notice.kind())), x + 1, y + 1, 1f);
+			if (notice.place() != null) {
+				// It happened somewhere: a click goes there.
+				g.fill(x + size - 4, y + size - 4, x + size - 1, y + size - 1, GOLD);
+			}
+			if (over || (fresh && spoken < 2)) {
+				List<String> lines = wrap(notice.text(), 176);
+				if (lines.size() > 4) {
+					lines = lines.subList(0, 4);
+				}
+				int width = 0;
+				for (String line : lines) {
+					width = Math.max(width, font.width(line));
+				}
+				String hint = notice.place() != null ? "Click: go there   Right click: put away" : "Click: open   Right click: put away";
+				if (over) {
+					width = Math.max(width, font.width(hint));
+				}
+				int height = lines.size() * 9 + 5 + (over ? 10 : 0);
+				int bx = x - width - 14;
+				int by = Math.max(18, y + (size - height) / 2);
+				int alpha = over || age < 90 ? 0xF0 : (int) (0xF0 * (110 - age) / 20.0);
+				g.fill(bx, by, bx + width + 10, by + height, (alpha << 24) | 0x101018);
+				g.fill(bx, by, bx + 2, by + height, (Math.min(255, alpha + 15) << 24) | (edge & 0xFFFFFF));
+				for (int i = 0; i < lines.size(); i++) {
+					g.text(font, lines.get(i), bx + 6, by + 3 + i * 9, (Math.min(255, alpha + 15) << 24) | 0xFFFFFF, false);
+				}
+				if (over) {
+					g.text(font, hint, bx + 6, by + 4 + lines.size() * 9, DIM, false);
+				}
+				spoken++;
+			}
+			zones.add(new Zone(x - 1, y - 1, size + 2, size + 2, null, () -> openNotice(notice)));
+			rightZones.add(new Zone(x - 1, y - 1, size + 2, size + 2, null, () -> RtsClient.notices.remove(notice)));
 			shown++;
+		}
+		if (more > 0 || shown > 1) {
+			int y = top + shown * (size + 3);
+			boolean over = mx >= x - 1 && mx < x + size + 1 && my >= y - 1 && my < y + 11;
+			g.fill(x - 1, y - 1, x + size + 1, y + 11, over ? WHITE : BORDER);
+			g.fill(x, y, x + size, y + 10, over ? PANEL_LIGHT : 0xF0141420);
+			g.centeredText(font, more > 0 ? "+" + more : "x", x + size / 2, y + 1, more > 0 ? GOLD : DIM);
+			zones.add(new Zone(x - 1, y - 1, size + 2, 12, more > 0 ? more + " more. Click: all the news so far (N). Right click: put all away" : "Put all the news away. All of it stays in the list (N)",
+				more > 0 ? RtsClient::showLog : () -> RtsClient.notices.clear()));
+			rightZones.add(new Zone(x - 1, y - 1, size + 2, 12, null, () -> RtsClient.notices.clear()));
+		}
+		if (passing != null) {
+			long age = RtsClient.ticks - passing.at();
+			String text = passing.text();
+			while (font.width(text) > w - 420 && text.length() > 8) {
+				text = text.substring(0, text.length() - 1);
+			}
+			if (!text.equals(passing.text())) {
+				text += "..";
+			}
+			int width = font.width(text) + 16;
+			int alpha = age < 90 ? 0xE0 : (int) (0xE0 * (110 - age) / 20.0);
+			int bx = (w - width) / 2;
+			int by = h - 30;
+			g.fill(bx, by, bx + width, by + 14, (alpha << 24) | 0x101018);
+			g.fill(bx, by + 13, bx + width, by + 14, (alpha << 24) | 0xFFD75E);
+			g.centeredText(font, text, w / 2, by + 3, (Math.min(255, alpha + 31) << 24) | 0xFFFFFF);
 		}
 	}
 
@@ -1670,7 +1820,7 @@ public final class RtsScreen extends Screen {
 		{ "T   P   V   R", "technologies, policies, ways to win, religion" },
 		{ "M   Y   G   O", "world map, yields, hex grid, colours of the borders" },
 		{ "L   N", "who plays (take a civilization, a new game); the news so far" },
-		{ "F12", "walk the land yourself, and back up" },
+		{ "F12", "walk the land yourself, where you point on your own land; and back up" },
 		{ "Esc", "close what is open, let the unit go, game menu" },
 	};
 
@@ -1976,6 +2126,10 @@ public final class RtsScreen extends Screen {
 			dealPage(g, menu);
 			return;
 		}
+		if (menu.kind().equals("citysheet")) {
+			cityPage(g, menu);
+			return;
+		}
 		int width = Math.min(400, w - 40);
 		int x = (w - width) / 2;
 		int y = 36;
@@ -2032,6 +2186,233 @@ public final class RtsScreen extends Screen {
 		}
 		if (scroll + shown < rows) {
 			g.text(font, "\u25BC", x + width - 10, y + height - 4, GOLD, false);
+		}
+	}
+
+	private void bar(GuiGraphicsExtractor g, int x, int y, int width, double part, int color) {
+		g.fill(x, y, x + width, y + 6, 0xFF0C0C12);
+		g.fill(x + 1, y + 1, x + 1 + (int) Math.round((width - 2) * Math.max(0.0, Math.min(1.0, part))), y + 5, color);
+		g.outline(x, y, width, 6, 0xFF4A4A56);
+	}
+
+	private String fit(String text, int width) {
+		String out = text;
+		while (font.width(out) > width && out.length() > 4) {
+			out = out.substring(0, out.length() - 1);
+		}
+		return out.equals(text) ? out : out + "..";
+	}
+
+	/**
+	 * A city as a sheet, not as a page of sentences: what it makes a turn as six numbers with their pictures; how
+	 * near it is to growing, to finishing what it builds and to widening its border as three bars with the turns
+	 * left; its walls; what is lined up; and what stands in it as a list with a picture and a line on each. The
+	 * rows are the game's own (see the engine's "citysheet"): type, group, id, turns, name, with bars between.
+	 */
+	private void cityPage(GuiGraphicsExtractor g, Net.Menu menu) {
+		List<String[]> yields = new ArrayList<>();
+		List<String[]> queue = new ArrayList<>();
+		List<String[]> great = new ArrayList<>();
+		List<String[]> buildings = new ArrayList<>();
+		List<String[]> happy = new ArrayList<>();
+		Map<String, String[]> one = new HashMap<>();
+		for (Net.Line line : menu.lines()) {
+			String[] row = line.text().split("\\|", 5);
+			if (row.length < 5) {
+				continue;
+			}
+			switch (row[0]) {
+				case "YIELD" -> yields.add(row);
+				case "QUEUE" -> queue.add(row);
+				case "GREAT" -> great.add(row);
+				case "BUILDING" -> buildings.add(row);
+				case "HAPPY" -> happy.add(row);
+				default -> one.put(row[0], row);
+			}
+		}
+		int width = Math.min(440, w - 40);
+		int x = (w - width) / 2;
+		int y = 36;
+		int buttonRows = (menu.buttons().size() + 1) / 2;
+		int fixed = 17 + 32 + 36 + 14 + (queue.isEmpty() ? 0 : 12) + great.size() * 11 + (happy.isEmpty() ? 0 : 12) + 14 + buttonRows * 18 + 6;
+		int listRows = (buildings.size() + 1) / 2;
+		int room = Math.max(1, (h - 30 - y - fixed) / 21);
+		int shownRows = Math.min(listRows, room);
+		RtsClient.menuScroll = Math.max(0, Math.min(listRows - shownRows, RtsClient.menuScroll));
+		int height = fixed + shownRows * 21;
+		pageFrame(g, menu, x, y, width, height);
+		int cy = y + 18;
+
+		// What it makes a turn.
+		int chip = (width - 12) / Math.max(1, yields.size());
+		for (int i = 0; i < yields.size(); i++) {
+			String[] row = yields.get(i);
+			int tenths = Integer.parseInt(row[2]);
+			boolean net = row[4].equals("Food") || row[4].equals("Gold");
+			String number = (net && tenths > 0 ? "+" : "") + (tenths % 10 == 0 ? Integer.toString(tenths / 10) : String.format(Locale.ROOT, "%.1f", tenths / 10.0));
+			int color = WHITE;
+			String picture = "paper";
+			for (Rich.Measure measure : Rich.MEASURES) {
+				if (measure.word().equals(row[4])) {
+					color = measure.color();
+					picture = measure.picture();
+				}
+			}
+			int cx = x + 6 + i * chip;
+			g.fill(cx, cy, cx + chip - 3, cy + 28, 0xFF1A1A22);
+			item(g, icon(picture), cx + 3, cy + 1, 1f);
+			g.text(font, number, cx + 22, cy + 5, tenths < 0 ? RED : color, true);
+			g.text(font, fit(row[4], chip - 8), cx + 4, cy + 18, DIM, false);
+		}
+		cy += 32;
+
+		// Growing, building, widening: three bars and the turns left.
+		int third = (width - 12) / 3;
+		String[] grow = one.get("GROW");
+		String[] people = one.get("PEOPLE");
+		String[] build = one.get("BUILD");
+		String[] border = one.get("BORDER");
+		if (grow != null) {
+			int turns = Integer.parseInt(grow[3]);
+			int needed = Integer.parseInt(grow[1]);
+			int stored = Integer.parseInt(grow[2]);
+			int cx = x + 6;
+			g.text(font, turns > 0 ? "Grows in " + turns + (turns == 1 ? " turn" : " turns") : turns < 0 ? "Starves in " + -turns + (-turns == 1 ? " turn" : " turns") : "Not growing", cx, cy,
+				turns > 0 ? GREEN : turns < 0 ? RED : DIM, false);
+			bar(g, cx, cy + 11, third - 6, needed <= 0 ? 0 : stored / (double) needed, turns < 0 ? RED : 0xFF7FE060);
+			String under = stored + "/" + needed + " food";
+			if (people != null) {
+				int idle = Integer.parseInt(people[1]);
+				under = people[2] + (people[2].equals("1") ? " citizen" : " citizens") + (idle > 0 ? ", " + idle + " idle" : "");
+			}
+			g.text(font, fit(under, third - 6), cx, cy + 20, DIM, false);
+		}
+		if (build != null) {
+			int cost = Integer.parseInt(build[1]);
+			int done = Integer.parseInt(build[2]);
+			int turns = Integer.parseInt(build[3]);
+			int cx = x + 6 + third;
+			boolean nothing = build[4].isEmpty();
+			g.text(font, nothing ? "Nothing is being built" : fit(build[4], third - 6), cx, cy, nothing ? RED : WHITE, false);
+			bar(g, cx, cy + 11, third - 6, cost <= 0 ? 0 : done / (double) cost, 0xFFFFA040);
+			g.text(font, nothing ? "Choose under 'Back to the city'" : cost <= 0 ? "for as long as it stands" : turns + (turns == 1 ? " turn left" : " turns left") + "   " + done + "/" + cost, cx, cy + 20,
+				nothing ? DIM : turns > 0 ? GOLD : DIM, false);
+		}
+		if (border != null) {
+			int needed = Integer.parseInt(border[1]);
+			int stored = Integer.parseInt(border[2]);
+			int turns = Integer.parseInt(border[3]);
+			int cx = x + 6 + third * 2;
+			g.text(font, turns > 0 ? "Border grows in " + turns : "Border stands still", cx, cy, turns > 0 ? 0xFFE28BFF : DIM, false);
+			bar(g, cx, cy + 11, third - 6, needed <= 0 ? 0 : stored / (double) needed, 0xFFE28BFF);
+			g.text(font, turns > 0 ? stored + "/" + needed + " culture" : "it makes no culture", cx, cy + 20, DIM, false);
+		}
+		cy += 36;
+
+		// Its walls, and what its people believe.
+		String[] defence = one.get("DEFENCE");
+		if (defence != null) {
+			int most = Integer.parseInt(defence[1]);
+			int health = Integer.parseInt(defence[2]);
+			item(g, icon("shield"), x + 6, cy - 2, 0.6f);
+			int tx = x + 18;
+			g.text(font, defence[3] + " strength", tx, cy, 0xFFFFB0A0, false);
+			tx += font.width(defence[3] + " strength") + 8;
+			bar(g, tx, cy + 1, 70, most <= 0 ? 0 : health / (double) most, health * 2 < most ? RED : GREEN);
+			g.text(font, health + "/" + most, tx + 74, cy, DIM, false);
+			if (defence[4].equals("fire")) {
+				g.text(font, "can fire", tx + 80 + font.width(health + "/" + most), cy, GOLD, false);
+			}
+		}
+		String[] faith = one.get("FAITH");
+		if (faith != null) {
+			String said = faith[4].isEmpty() ? "No religion" : faith[4] + " " + faith[2] + "/" + faith[1];
+			item(g, icon("feather"), x + width - 18 - font.width(said), cy - 2, 0.6f);
+			g.text(font, said, x + width - 6 - font.width(said), cy, faith[4].isEmpty() ? DIM : 0xFFF4F0DC, false);
+		}
+		cy += 14;
+		if (!queue.isEmpty()) {
+			StringBuilder next = new StringBuilder();
+			for (String[] row : queue) {
+				next.append(next.length() == 0 ? "" : "   ").append(row[2]).append(". ").append(row[4]).append(row[3].equals("0") ? "" : " (" + row[3] + ")");
+			}
+			g.text(font, "NEXT", x + 6, cy, DIM, false);
+			g.text(font, fit(next.toString(), width - 44), x + 34, cy, 0xFFE4E4EC, false);
+			cy += 12;
+		}
+		for (String[] row : great) {
+			int needed = Integer.parseInt(row[1]);
+			int have = Integer.parseInt(row[2]);
+			g.text(font, fit(row[4], 110), x + 6, cy, 0xFFE4E4EC, false);
+			bar(g, x + 122, cy + 1, 120, needed <= 0 ? 0 : have / (double) needed, GOLD);
+			g.text(font, "+" + row[3] + " a turn   " + have + "/" + needed, x + 248, cy, DIM, false);
+			cy += 11;
+		}
+		if (!happy.isEmpty()) {
+			int hx = x + 6;
+			item(g, icon("sunflower"), hx, cy - 2, 0.6f);
+			hx += 12;
+			for (String[] row : happy) {
+				int faces = Integer.parseInt(row[3]);
+				String said = (faces > 0 ? "+" : "") + faces + " " + row[4];
+				if (hx + font.width(said) > x + width - 8) {
+					break;
+				}
+				g.text(font, said, hx, cy, faces < 0 ? RED : 0xFFFFE860, false);
+				hx += font.width(said) + 10;
+			}
+			cy += 12;
+		}
+
+		// What stands in it.
+		g.fill(x + 1, cy, x + width - 1, cy + 12, 0xFF23232D);
+		g.text(font, "STANDS IN THE CITY  ·  " + buildings.size(), x + 6, cy + 2, GOLD, false);
+		cy += 14;
+		int cell = (width - 12) / 2;
+		for (int row = 0; row < shownRows; row++) {
+			for (int col = 0; col < 2; col++) {
+				int index = (RtsClient.menuScroll + row) * 2 + col;
+				if (index >= buildings.size()) {
+					break;
+				}
+				String[] building = buildings.get(index);
+				String[] parts = building[4].split("\\|", 2);
+				boolean wonder = !building[1].equals("0");
+				int cx = x + 6 + col * cell;
+				int by = cy + row * 21;
+				g.fill(cx, by, cx + cell - 3, by + 20, row % 2 == 0 ? 0xFF1A1A22 : 0xFF16161C);
+				String picture = Rich.picture((wonder ? "Wonder: " : "Building: ") + parts[0]);
+				if (picture != null) {
+					item(g, icon(picture), cx + 2, by + 2, 1f);
+				}
+				g.text(font, fit(parts[0], cell - 50), cx + 21, by + 2, wonder ? GOLD : WHITE, false);
+				int upkeep = Integer.parseInt(building[2]);
+				if (upkeep > 0) {
+					String costs = "-" + upkeep;
+					item(g, icon("gold_ingot"), cx + cell - 14, by + 1, 0.5f);
+					g.text(font, costs, cx + cell - 16 - font.width(costs), by + 2, 0xFFFF9A8A, false);
+				}
+				String does = parts.length > 1 ? parts[1] : "";
+				if (!does.isEmpty()) {
+					List<List<String>> brief = Rich.brief(font, does.replace("; ", "\n").replace(", ", "\n"), cell - 28, 1);
+					if (!brief.isEmpty()) {
+						rich(g, Rich.pieces(brief.get(0), false, 0xFFB8B8C4, true), cx + 21, by + 11, false);
+					}
+					zones.add(new Zone(cx, by, cell - 3, 20, parts[0] + "\n" + does.replace("; ", "\n") + (upkeep > 0 ? "\nUpkeep " + upkeep + " Gold" : ""), () -> { }));
+				}
+			}
+		}
+		if (RtsClient.menuScroll > 0) {
+			g.text(font, "\u25B2", x + width - 10, cy - 12, GOLD, false);
+		}
+		if (RtsClient.menuScroll + shownRows < listRows) {
+			g.text(font, "\u25BC", x + width - 10, cy + shownRows * 21 - 8, GOLD, false);
+		}
+		cy += shownRows * 21 + 2;
+		int gap = 4;
+		int buttonWidth = (width - gap * 3) / 2;
+		for (int i = 0; i < menu.buttons().size(); i++) {
+			pageButton(g, menu, menu.buttons().get(i), x + gap + (i % 2) * (buttonWidth + gap), cy + (i / 2) * 18, buttonWidth, 0xFF1C1C24);
 		}
 	}
 
@@ -2604,6 +2985,14 @@ public final class RtsScreen extends Screen {
 		for (int i = 0; i < 4; i++) {
 			line(g, corners[i][0], corners[i][1], corners[(i + 1) % 4][0], corners[(i + 1) % 4][1], WHITE, 1);
 		}
+		if (RtsClient.view.me != null) {
+			// The player's own figure: a gold mark that blinks.
+			GridPos own = model.layout().toGrid(model.centerX(RtsClient.view.me) + 0.5, model.centerZ(RtsClient.view.me) + 0.5);
+			int ox = Math.round((float) (miniX + (own.u() + 0.5) * miniCell));
+			int oy = Math.round((float) (miniY + (rows - 0.5 - own.v()) * miniCell));
+			g.fill(ox - 3, oy - 3, ox + 3, oy + 3, (RtsClient.ticks / 10) % 2 == 0 ? WHITE : 0xFF1A1206);
+			g.fill(ox - 2, oy - 2, ox + 2, oy + 2, GOLD);
+		}
 		clipOff(g);
 		zones.add(new Zone(miniX - 3, miniY - 3, miniW + 6, miniH + 6, null, () -> {
 			double u = (mx - miniX) / miniCell - 0.5;
@@ -2726,6 +3115,12 @@ public final class RtsScreen extends Screen {
 			return true;
 		}
 		if (event.button() == InputConstants.MOUSE_BUTTON_RIGHT) {
+			for (Zone zone : rightZones) {
+				if (zone.has(x, y)) {
+					zone.click.run();
+					return true;
+				}
+			}
 			if (onPanel(x, y)) {
 				return true;
 			}

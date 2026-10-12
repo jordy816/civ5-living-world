@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_25",
   "mixins": [
     "CraftingMenuMixin",
+    "ServerExplosionMixin",
     "TrackedEntityMixin"
   ],
   "injectors": { "defaultRequire": 1 }

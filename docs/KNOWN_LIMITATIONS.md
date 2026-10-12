@@ -102,12 +102,27 @@ Decided for you:
   which does not exist here; to ask it before the transfer would mean changing Unciv.)
 - **The name of your religion**: your people's own when it is still free, else the first that is.
 
-Not there:
+A ruler in person, new in 0.2.0 and so the least played part:
 
-- **Spies.** Espionage belongs to the expansion after the rule set used here (Gods & Kings as
-  Unciv has it) and is switched off, for everybody.
-- **More than one civilization for players.** Everyone in the Minecraft world rules the same
-  civilization together.
+- **Only armies on land send soldiers.** Workers, settlers, ships, aircraft and cities do not
+  fight a ruler on foot, and a ruler does not hurt them. The tall figure of a unit itself
+  cannot be hit: its soldiers are the fight.
+- **Soldiers are Minecraft's creatures and behave as those do**: a skeleton shoots, a zombie
+  that stays under water becomes a drowned one (it is still the same soldier). What a unit is
+  shown as when that creature cannot fight on foot (a ghast, a creeper, a shulker) is stood in
+  for by a zombie or a skeleton.
+- **How hard a fight is has been set by reckoning, not by playing.** A soldier of an early
+  unit falls to three blows of a wooden sword and takes about a heart a blow; later armies
+  want the arms a governor sells. One person fought them with real mouse and keys once, and
+  lost. Expect the numbers to change.
+- **The Shoshone** have their wide borders, their strength on their own land, the Pathfinder
+  and the Comanche Riders. The Pathfinder does not choose what it finds in a ruin (Unciv has
+  no rule for that).
+- **The sounds have not been heard.** The machines the client is tested on have no sound
+  card. Every sound is one of Minecraft's own and its name was checked against the game's
+  list; how loud and how many is a guess until somebody plays with the sound on.
+- **The sketch of a kind of map** on the table is a drawing of its shape, not the map the game
+  will make.
 
 As in Civilization V, and so not a gap: **a city stands on one hex.** It does not spread over
 its neighbours as it grows; here it builds taller. Eight lots is all the room there is, so of a

@@ -88,6 +88,25 @@ public final class LivingWorldMod implements ModInitializer {
 			if (session != null && entity.entityTags().contains(Summon.TAG) && !session.proxies.isOurs(entity.getUUID())) {
 				level.getServer().execute(entity::discard);
 			}
+			if (session != null && (entity.entityTags().contains(Ruler.FIGURE_TAG) || entity.entityTags().contains(Ruler.SOLDIER_TAG)) && !session.ruler.isOurs(entity.getUUID())) {
+				level.getServer().execute(entity::discard);
+			}
+		});
+		// A soldier beaten by a ruler's own hand, and a ruler who falls.
+		net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
+			if (session != null && entity.level() == session.server.overworld()) {
+				session.ruler.died(entity, source);
+			}
+		});
+		net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.MOB_CONVERSION.register((before, after, how) -> {
+			if (session != null) {
+				session.ruler.became(before, after);
+			}
+		});
+		net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents.AFTER_RESPAWN.register((before, now, alive) -> {
+			if (session != null) {
+				session.ruler.respawned(now);
+			}
 		});
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			if (session != null) {
@@ -279,6 +298,27 @@ public final class LivingWorldMod implements ModInitializer {
 		}
 		String missing = session.missingTech(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
 		return missing == null ? null : Gameplay.words(missing);
+	}
+
+	/**
+	 * For the hook on explosions: of the blocks a blast would take, those it may. The board is the game's picture of
+	 * the world, so a blast changes it only where whoever set it off may dig: on their own land, not in a city, not
+	 * a wonder. A blast nobody set off takes nothing.
+	 */
+	public static java.util.List<net.minecraft.core.BlockPos> blastable(net.minecraft.server.level.ServerLevel level, net.minecraft.world.entity.Entity by,
+		java.util.List<net.minecraft.core.BlockPos> blocks) {
+		if (session == null || level != session.server.overworld() || session.model() == null) {
+			return blocks;
+		}
+		java.util.List<net.minecraft.core.BlockPos> out = new java.util.ArrayList<>();
+		if (by instanceof ServerPlayer player) {
+			for (net.minecraft.core.BlockPos pos : blocks) {
+				if (session.handsTied(player, pos) == null) {
+					out.add(pos);
+				}
+			}
+		}
+		return out;
 	}
 
 	static WorldState shownState() {

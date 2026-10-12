@@ -311,6 +311,10 @@ final class Codex {
 				break;
 			}
 			boolean own = city.key().owner() == viewer;
+			if (session.builtin && !own) {
+				// A ruler is set down on their own land only; other people's cities are walked to.
+				continue;
+			}
 			CivInfo owner = state.civ(city.key().owner());
 			String label = city.name() + (own ? (city.capital() ? "  (your capital)" : "") : "  ·  " + (owner == null ? "unknown" : owner.name()));
 			menu.button(label, null, traveller -> {

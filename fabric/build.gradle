@@ -34,6 +34,8 @@ loom {
 sourceSets.main.java.srcDir "../bridge/src/main/java"
 sourceSets.main.resources.srcDir "../bridge/src/main/resources"
 sourceSets.main.java.srcDir "../engine/src/main/java"
+// (With the rule files this mod adds to Unciv's own: a civilization it does not have.)
+sourceSets.main.resources.srcDir "../engine/src/main/resources"
 
 // The game engine itself (Unciv, MPL-2.0; fetched and cut down by scripts/dev/fetch-unciv.sh) travels inside the mod jar too.
 def uncivVersion = '4.22.8'

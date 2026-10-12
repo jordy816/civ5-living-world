@@ -35,6 +35,7 @@ public final class Hands {
 		new Good("Melon", stack -> stack.is(Items.MELON_SLICE), 1, FOOD),
 		new Good("Berries", stack -> stack.is(Items.SWEET_BERRIES), 1, FOOD),
 		new Good("Apple", stack -> stack.is(Items.APPLE), 1, FOOD),
+		new Good("Fish", stack -> stack.is(Items.COD) || stack.is(Items.SALMON), 2, FOOD),
 		new Good("Emerald", stack -> stack.is(Items.EMERALD), 6, GOLD),
 		new Good("Raw gold", stack -> stack.is(Items.RAW_GOLD), 4, GOLD),
 		new Good("Gold", stack -> stack.is(Items.GOLD_INGOT), 4, GOLD));

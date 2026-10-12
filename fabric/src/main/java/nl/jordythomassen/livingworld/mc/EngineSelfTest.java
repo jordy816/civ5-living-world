@@ -176,6 +176,208 @@ final class EngineSelfTest {
 		}
 	}
 
+	private int rulerStep;
+	private int rulerWait;
+	private EntityKey foe;
+	private int foeHealth;
+	private int rulerGold;
+	private PlotCoord wildHex;
+	private PlotCoord ownHex;
+	private PlotCoord foeAt;
+
+	/**
+	 * A ruler in person: set down on their own land only, met by the soldiers of an enemy unit they come near,
+	 * whose defeat costs that unit health in the game; carried home at a price when they fall; and armed and
+	 * trained from the treasury. A step a call; false until all of it has run.
+	 */
+	private boolean ruler(WorldState state, BoardModel model, ServerLevel level, int me) {
+		CityState city = state.cities().get(capital);
+		if (city == null) {
+			return true;
+		}
+		var engine = (nl.jordythomassen.livingworld.unciv.UncivLink) session.link;
+		switch (rulerStep) {
+			case 0 -> {
+				var grid = state.session().grid();
+				for (int x = 0; x < grid.width(); x++) {
+					for (int y = 0; y < grid.height(); y++) {
+						PlotCoord at = new PlotCoord(x, y);
+						PlotState there = state.plot(at);
+						if (!there.revealed() || there.water() || there.elevation() == PlotState.MOUNTAIN || there.city()) {
+							continue;
+						}
+						if (there.owner() == me && ownHex == null) {
+							ownHex = at;
+						} else if (there.owner() != me && (wildHex == null || grid.distance(at, city.at()) < grid.distance(wildHex, city.at()))) {
+							wildHex = at;
+						}
+					}
+				}
+				boolean ruled = ownHex != null && wildHex != null;
+				PlotCoord landed = ruled ? session.ruler.landing(fake, wildHex) : null;
+				check("a ruler is set down on their own land only: pointing beyond it sets them down on the nearest of their own",
+					ruled && session.ruler.mayStandOn(fake, ownHex) && !session.ruler.mayStandOn(fake, wildHex) && landed != null && state.plot(landed).owner() == me
+						&& ownHex.equals(session.ruler.landing(fake, ownHex)), "pointed at " + wildHex + " (not theirs), set down on " + landed);
+				// A blast takes what its maker may dig, and nothing when nobody made it.
+				if (ruled) {
+					BlockPos mine = ground(model, ownHex);
+					BlockPos wild = ground(model, wildHex);
+					List<BlockPos> taken = LivingWorldMod.blastable(level, fake, List.of(mine, wild));
+					check("an explosion breaks blocks on its maker's own land only, and none when nobody set it off",
+						taken.size() == 1 && taken.get(0).equals(mine) && LivingWorldMod.blastable(level, null, List.of(mine, wild)).isEmpty(), taken.size() + " of 2 blocks");
+				}
+				// The table: the game first, then the lobby where people say they are ready; changing the game asks them again.
+				session.lobby.standIn = fake;
+				session.lobby.act(fake, new Net.Act("lobby", 0, 0, 0, 0, "new"));
+				session.lobby.act(fake, new Net.Act("lobby", 0, 0, 0, 0, "stage:2"));
+				session.lobby.act(fake, new Net.Act("lobby", 0, 0, 0, 0, "ready"));
+				String atLobby = session.lobby.where();
+				session.lobby.act(fake, new Net.Act("lobby", 0, 0, 0, 0, "stage:1"));
+				String atGame = session.lobby.where();
+				session.lobby.act(fake, new Net.Act("lobby", 0, 0, 0, 0, "back"));
+				session.lobby.standIn = null;
+				check("the table goes from the game to the lobby and back, and going back nobody is ready any more", atLobby.equals("lobby, 1 ready") && atGame.equals("game, 0 ready"),
+					atLobby + "; " + atGame);
+				// A barbarian Warrior two hexes from the capital.
+				engine.onGameThread(() -> {
+					var home = engine.viewer().getCapital(false).getCenterTile();
+					for (var tile : nl.jordythomassen.livingworld.unciv.Kt.list(home.getTilesInDistanceRange(new kotlin.ranges.IntRange(2, 2)))) {
+						if (tile.isLand() && !tile.isImpassible() && tile.getMilitaryUnit() == null && !tile.isCityCenter()
+							&& engine.game().getTileMap().placeUnitNearTile(tile.getPosition(), "Warrior", engine.game().getBarbarianCivilization(), null) != null) {
+							break;
+						}
+					}
+				});
+				rulerStep = 1;
+				rulerWait = 0;
+				return false;
+			}
+			case 1 -> {
+				UnitState enemy = state.units().values().stream().filter(u -> u.key().owner() != me && state.civ(u.key().owner()) != null && state.civ(u.key().owner()).barbarian()
+					&& state.session().grid().distance(u.at(), city.at()) <= 3).findFirst().orElse(null);
+				if (enemy == null) {
+					if (++rulerWait > 200) {
+						check("soldiers of an enemy unit step out to meet a ruler who comes near on foot", false, "no barbarian came into sight near the capital");
+						rulerStep = 9;
+					}
+					return false;
+				}
+				foe = enemy.key();
+				foeHealth = enemy.hp();
+				int x = model.centerX(enemy.at());
+				int z = model.centerZ(enemy.at());
+				// With nobody on the server no land is kept alive for creatures to live on: this piece is, for as long as the fight takes.
+				for (int dx = -1; dx <= 1; dx++) {
+					for (int dz = -1; dz <= 1; dz++) {
+						session.painter.paintNow(level, level.getChunk((x >> 4) + dx, (z >> 4) + dz));
+						level.setChunkForced((x >> 4) + dx, (z >> 4) + dz, true);
+					}
+				}
+				foeAt = enemy.at();
+				session.place(fake, enemy.at());
+				rulerStep = 2;
+				rulerWait = 0;
+				return false;
+			}
+			case 2 -> {
+				// (Figures come into being near a player, and a ruler is looked after twice a second; with nobody on the server both are done by hand.)
+				session.proxies.showAll(level);
+				session.ruler.attend(level, fake);
+				java.util.UUID id = session.ruler.anySoldier();
+				if (id != null && level.getEntity(id) == null && ++rulerWait <= 300) {
+					// Out, but the world has not taken them in yet.
+					return false;
+				}
+				if (id == null) {
+					if (++rulerWait > 300) {
+						Proxies.Proxy proxy = session.proxies.unit(foe);
+						check("soldiers of an enemy unit step out to meet a ruler who comes near on foot", false, "none came; the unit's figure " + (proxy == null ? "is not there"
+							: proxy.placed ? "stands " + Math.round(Math.hypot(proxy.x - fake.getX(), proxy.z - fake.getZ())) + " blocks off" : "is not placed"));
+						rulerStep = 9;
+					}
+					return false;
+				}
+				net.minecraft.world.entity.Entity soldier = level.getEntity(id);
+				boolean real = soldier instanceof net.minecraft.world.entity.Mob mob && !mob.isNoAi() && mob.getTarget() == fake;
+				check("soldiers of an enemy unit step out to meet a ruler who comes near on foot, with a will of their own", session.ruler.fights() == 1 && real,
+					session.ruler.soldiers() + " of them, " + (soldier == null ? "gone" : soldier.getType().toShortString() + (real ? " that came for the ruler" : " that stands idle")));
+				if (soldier instanceof net.minecraft.world.entity.LivingEntity living) {
+					living.hurtServer(level, level.damageSources().playerAttack(fake), 1000f);
+				}
+				rulerStep = 3;
+				rulerWait = 0;
+				return false;
+			}
+			case 3 -> {
+				if (++rulerWait < 40) {
+					return false;
+				}
+				UnitState enemy = state.units().get(foe);
+				check("a soldier beaten by the ruler's own hand costs its unit health in the game", enemy != null && enemy.hp() == foeHealth - Ruler.PER_SOLDIER,
+					foeHealth + " -> " + (enemy == null ? "gone" : Integer.toString(enemy.hp())));
+				for (int dx = -1; dx <= 1 && foeAt != null; dx++) {
+					for (int dz = -1; dz <= 1; dz++) {
+						level.setChunkForced((model.centerX(foeAt) >> 4) + dx, (model.centerZ(foeAt) >> 4) + dz, false);
+					}
+				}
+				// The ruler falls with wheat in their pack: carried home, the wheat lost, a tenth of the treasury gone.
+				engine.onGameThread(() -> {
+					engine.viewer().addGold(300 - engine.viewer().getGold());
+					for (var unit : nl.jordythomassen.livingworld.unciv.Kt.list(engine.game().getBarbarianCivilization().getUnits().getCivUnits())) {
+						unit.destroy(false);
+					}
+				});
+				fake.getInventory().add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.WHEAT, 5));
+				rulerStep = 4;
+				rulerWait = 0;
+				return false;
+			}
+			case 4 -> {
+				if (++rulerWait < 30) {
+					return false;
+				}
+				rulerGold = state.empire().gold();
+				session.ruler.died(fake, level.damageSources().generic());
+				session.ruler.respawned(fake);
+				rulerStep = 5;
+				rulerWait = 0;
+				return false;
+			}
+			case 5 -> {
+				if (++rulerWait < 40) {
+					return false;
+				}
+				PlotCoord at = model.plotAt(fake.getBlockX(), fake.getBlockZ());
+				check("a ruler who falls is carried home to their capital: it costs a tenth of the treasury and what they carried for their cities",
+					rulerGold == 300 && state.empire().gold() == 270 && fake.getInventory().countItem(net.minecraft.world.item.Items.WHEAT) == 0 && city.at().equals(at)
+						&& session.ruler.fights() == 0, "gold " + rulerGold + " -> " + state.empire().gold() + ", wheat left " + fake.getInventory().countItem(net.minecraft.world.item.Items.WHEAT)
+						+ ", stands on " + at + " (capital " + city.at() + "), fights going on " + session.ruler.fights());
+				rulerGold = state.empire().gold();
+				session.as(fake, () -> {
+					session.ruler.armsMenu(fake, 0xE0B040);
+					session.ruler.buyByName(fake, "Arms of the new age");
+					session.ruler.buyByName(fake, "Training");
+				});
+				rulerStep = 6;
+				rulerWait = 0;
+				return false;
+			}
+			case 6 -> {
+				if (++rulerWait < 40) {
+					return false;
+				}
+				check("a ruler trains for gold (a heart more) and cannot buy arms their people do not know how to make",
+					Math.abs(fake.getMaxHealth() - 22f) < 0.01f && state.empire().gold() == rulerGold - 60
+						&& fake.getInventory().countItem(net.minecraft.world.item.Items.NETHERITE_SWORD) == 0, "health " + fake.getMaxHealth() + ", gold " + rulerGold + " -> " + state.empire().gold());
+				rulerStep = 9;
+				return true;
+			}
+			default -> {
+				return true;
+			}
+		}
+	}
+
 	private void next() {
 		stage++;
 		waited = 0;
@@ -499,6 +701,9 @@ final class EngineSelfTest {
 					return;
 				}
 				if (!hands(state, model, level, me)) {
+					return;
+				}
+				if (!ruler(state, model, level, me)) {
 					return;
 				}
 				CityState city = state.cities().get(capital);

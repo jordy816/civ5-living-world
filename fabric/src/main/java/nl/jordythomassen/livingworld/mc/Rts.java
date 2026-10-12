@@ -101,6 +101,7 @@ final class Rts {
 	/** Sends a view, saying which mode and whose turn it is as of this very moment. */
 	private void send(ServerPlayer player, RtsView view) {
 		view.rts = isAbove(player);
+		view.me = view.rts ? session.ruler.figureAt(player) : null;
 		int civ = session.seats.of(player);
 		view.seat = civ;
 		view.several = session.seats.several();
@@ -137,32 +138,19 @@ final class Rts {
 		BoardModel model = session.model();
 		WorldState state = session.stateOf(player);
 		if (model != null && state != null) {
-			PlotCoord from = wanted != null ? wanted : model.plotAt(player.getBlockX(), player.getBlockZ());
-			PlotCoord best = null;
-			if (from != null) {
-				var grid = state.session().grid();
-				int nearest = Integer.MAX_VALUE;
-				for (int x = 0; x < grid.width(); x++) {
-					for (int y = 0; y < grid.height(); y++) {
-						PlotCoord at = new PlotCoord(x, y);
-						PlotState plot = state.plot(at);
-						if (!plot.revealed() || plot.water() || plot.elevation() == PlotState.MOUNTAIN) {
-							continue;
-						}
-						int distance = grid.distance(from, at);
-						if (distance < nearest) {
-							nearest = distance;
-							best = at;
-						}
-					}
-				}
-			}
+			// On the hex they pointed at when that is their own land, else the nearest of their own; with nothing pointed at, where their figure stands.
+			PlotCoord best = session.ruler.landing(player, wanted);
 			if (best != null) {
-				session.teleport(player, best);
+				session.place(player, best);
+				if (wanted != null && !best.equals(wanted) && session.seats.of(player) >= 0) {
+					player.sendSystemMessage(net.minecraft.network.chat.Component.literal("You are set down on your own land: the nearest of it to where you pointed. Beyond it you walk.")
+						.withStyle(net.minecraft.ChatFormatting.YELLOW));
+				}
 			} else {
 				session.sendHome(player);
 			}
 		}
+		session.ruler.cameDown(player);
 		flags(player);
 		refresh(player);
 	}
@@ -195,10 +183,15 @@ final class Rts {
 		refresh(player);
 	}
 
-	/** A line of news for one player: shown in the list at the side of their screen. */
+	/** A line of news for one player: shown at the side of their screen. */
 	void tell(ServerPlayer player, String text) {
+		tell(player, text, "news", null);
+	}
+
+	/** News that says what kind it is (the picture beside it) and where it happened (where a click on it leads). */
+	void tell(ServerPlayer player, String text, String kind, PlotCoord at) {
 		if (speaks(player)) {
-			news.computeIfAbsent(player.getUUID(), id -> new ArrayList<>()).add(text);
+			news.computeIfAbsent(player.getUUID(), id -> new ArrayList<>()).add(kind + "|" + (at == null ? "-1|-1" : at.x() + "|" + at.y()) + "|" + text);
 			stale.add(player.getUUID());
 		}
 	}
@@ -240,6 +233,16 @@ final class Rts {
 	private final Map<UUID, RtsView> sent = new HashMap<>();
 
 	void tick() {
+		// Whoever looks from above (also at the table, before there is a game) hangs at the height their own game steers
+		// them at. Left where they came in, their game would leap them up there itself, and a server that is not the
+		// player's own puts such a leap back, ten times a second, for as long as it lasts.
+		for (ServerPlayer player : session.server.getPlayerList().getPlayers()) {
+			if (player.isSpectator() && (above.contains(player.getUUID()) || player.entityTags().contains(ABOVE_TAG))
+				&& Math.abs(player.getY() - nl.jordythomassen.livingworld.board.Overlook.HANG_Y) > 8.0) {
+				player.teleportTo(session.server.overworld(), player.getX(), nl.jordythomassen.livingworld.board.Overlook.HANG_Y, player.getZ(), java.util.Set.of(),
+					player.getYRot(), player.getXRot(), false);
+			}
+		}
 		// While the land is still being painted, whoever looks down at it is told how far that is, once a second.
 		if (!above.isEmpty() && session.server.getTickCount() % 20 == 0) {
 			int waiting = session.painter.missing();

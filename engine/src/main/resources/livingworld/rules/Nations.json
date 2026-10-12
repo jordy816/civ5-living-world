@@ -1,0 +1,26 @@
+[
+	{
+		"name": "The Shoshone",
+		"leaderName": "Pocatello",
+		"adjective": ["Shoshone"],
+		"preferredVictoryType": "Domination",
+
+		"startIntroPart1": "Pocatello, chief of the Shoshone, your people look to you. They are riders and pathfinders who know every valley of the wide land between the mountains and the plains, and who never asked for more than to keep it.",
+		"startIntroPart2": "The land is wide and others will want it. Will you hold it, and lead your people further than any map of theirs reaches?",
+
+		"declaringWar": "You have crossed into land that was never yours. My riders are already on their way.",
+		"attacked": "So you come after all. You will not find us where you expect us.",
+		"defeated": "The land outlasts us both. Remember that when it is your turn.",
+		"introduction": "I am Pocatello of the Shoshone. You stand on the edge of a wide country; be welcome, as long as you are a guest.",
+		"neutralHello": "Welcome.",
+		"hateHello": "You again.",
+		"tradeRequest": "I have something you might want. Hear me out.",
+
+		"outerColor": [73, 58, 45],
+		"innerColor": [24, 239, 206],
+		"uniqueName": "Great Expanse",
+		"uniques": ["Gain control over [8] tiles [in this city] <upon founding a city>", "[+15]% Strength <when fighting in [Friendly Land] tiles>"],
+		"cities": ["Moson Kahni", "Goosh", "Agaidika", "Tukudeka", "Kammedeka", "Pohogwe", "Hukundeka", "Haivodika", "Yahandeka", "Pengwideka", "Tetadeka", "Deheyaeka",
+			"Sehewooki", "Waaddeka", "Kusiutta", "Timbisha", "Kuyudikka", "Painkwitikka", "Kutsundeka", "Wadadeka", "Nootka Kahni", "Toyahini", "Seekooki", "Bannaite"]
+	}
+]

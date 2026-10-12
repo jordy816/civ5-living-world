@@ -77,6 +77,11 @@ public final class UncivBoot {
 			Ruleset ruleset = new Ruleset();
 			ruleset.setName(base.getFullName());
 			ruleset.load(new FileHandle(jsons.resolve(base.getFullName()).toFile()));
+			if (base == BaseRuleset.Civ_V_GnK) {
+				// What Unciv's remake of the game leaves out and this mod adds, in Unciv's own rule language: read
+				// into the same rules, the way Unciv reads a mod. Unciv's own files are left as they are.
+				ruleset.load(new FileHandle(unpackOwnRules(dataDir).toFile()));
+			}
 			RulesetCache.INSTANCE.put(base.getFullName(), ruleset);
 		}
 		done = true;
@@ -95,6 +100,21 @@ public final class UncivBoot {
 		}
 		java.util.Collections.sort(out);
 		return out;
+	}
+
+	/** The rule files this mod adds (a civilization Unciv does not have), from this jar to dataDir/jsons-livingworld. */
+	private static Path unpackOwnRules(Path dataDir) throws IOException {
+		Path target = dataDir.toAbsolutePath().normalize().resolve("jsons-livingworld");
+		Files.createDirectories(target);
+		for (String name : new String[] { "Nations.json", "Units.json" }) {
+			try (InputStream raw = UncivBoot.class.getResourceAsStream("/livingworld/rules/" + name)) {
+				if (raw == null) {
+					throw new IOException("a rule file is missing from this build (livingworld/rules/" + name + ")");
+				}
+				Files.write(target.resolve(name), raw.readAllBytes());
+			}
+		}
+		return target;
 	}
 
 	/** The rule files, from the zip inside this jar to dataDir/jsons. Rewritten each start: they are small and belong to this build. */

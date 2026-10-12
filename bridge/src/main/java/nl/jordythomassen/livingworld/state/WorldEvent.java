@@ -55,8 +55,17 @@ public sealed interface WorldEvent {
 	record TechsLearned(java.util.Set<String> techs) implements WorldEvent {
 	}
 
-	/** Something the game tells the player in words: a unit lost, a wonder built elsewhere, a proposal made. */
-	record Notice(String text, PlotCoord at) implements WorldEvent {
+	/**
+	 * Something the game tells the player in words: a unit lost, a wonder built elsewhere, a proposal made.
+	 *
+	 * @param at where it happened, or null when it has no place
+	 * @param kind what sort of news it is, for the picture beside it and for where a click on it leads: news, build,
+	 *     city, war, talk, trade, unit, faith, spy, tech, policy
+	 */
+	record Notice(String text, PlotCoord at, String kind) implements WorldEvent {
+		public Notice(String text, PlotCoord at) {
+			this(text, at, "news");
+		}
 	}
 
 	/** The viewer's civilization entered another era. */

@@ -256,7 +256,7 @@ final class Proxies {
 	}
 
 	/** The owner's colour on the body; the helmet tells the era: leather, then chain, iron, diamond, netherite. */
-	private static String armour(int rgb, int eraTier) {
+	static String armour(int rgb, int eraTier) {
 		String dyed = ",count:1,components:{\"minecraft:dyed_color\":" + (rgb & 0xFFFFFF) + "}}";
 		// The helmet never wears out: it is what keeps the sun off the undead among the creatures.
 		String lasting = ",count:1,components:{\"minecraft:unbreakable\":{}}}";

@@ -89,6 +89,8 @@ final class LivingWorldServer {
 	final Gameplay gameplay = new Gameplay(this);
 	final Codex codex = new Codex(this);
 	final Rts rts = new Rts(this);
+	/** What a ruler is and does in person. */
+	final Ruler ruler = new Ruler(this);
 	/** Who rules which civilization, when several people each have their own. */
 	final Seats seats = new Seats(this);
 	/** The table a game is set up at, and the door of one that runs. */
@@ -328,6 +330,8 @@ final class LivingWorldServer {
 		rules.set(GameRules.RAIDS, false, server);
 		// Nothing that walks the board changes it: no creature picks up, tramples or leaves anything.
 		rules.set(GameRules.MOB_GRIEFING, false, server);
+		// A fire burns where it was lit and nowhere else.
+		rules.set(GameRules.FIRE_SPREAD_RADIUS_AROUND_PLAYER, 0, server);
 		// The units of the built-in game are Minecraft's own creatures, zombies and creepers among them, and those cannot
 		// exist in a peaceful world. Nothing spawns by itself (the rules above) and none of them has a will of its own.
 		server.setDifficulty(builtin ? Difficulty.EASY : Difficulty.PEACEFUL, true);
@@ -516,6 +520,7 @@ final class LivingWorldServer {
 			painter.setModel(model, otherMap, level);
 			if (otherMap) {
 				proxies.clear(level);
+				ruler.clear(level);
 			}
 			boolean several = link.seats().size() > 1;
 			// With several civilizations of people the built world changes for all, and the news of it is each one's own (below).
@@ -574,6 +579,8 @@ final class LivingWorldServer {
 		painter.hurry = rts.anyoneAbove();
 		painter.tick(level);
 		proxies.tick(level);
+		ruler.tick(level);
+		lobby.tick();
 		tickets();
 		players(level);
 		status();
@@ -628,15 +635,15 @@ final class LivingWorldServer {
 					boolean taken = builtin && mine && (e.city().flags() & CityState.F_OCCUPIED) != 0;
 					boolean landKnown = applied != null && applied.session().grid().contains(e.city().at()) && applied.plot(e.city().at()).revealed();
 					if (taken) {
-						announce(e.city().name() + " is yours now.", ChatFormatting.GOLD);
+						announce(e.city().name() + " is yours now.", ChatFormatting.GOLD, "city", e.city().at());
 						for (ServerPlayer player : listeners()) {
 							ServerPlayer who = player;
 							inbox.add(() -> as(who, () -> gameplay.fateMenu(who, e.city().key(), true)));
 						}
 					} else if (mine || landKnown) {
-						announce(civName(e.city().key().owner()) + " founded " + e.city().name() + ".", ChatFormatting.GOLD);
+						announce(civName(e.city().key().owner()) + " founded " + e.city().name() + ".", ChatFormatting.GOLD, "city", e.city().at());
 					} else {
-						announce("Your people have come upon " + e.city().name() + ", a city of " + civName(e.city().key().owner()) + ".", ChatFormatting.GOLD);
+						announce("Your people have come upon " + e.city().name() + ", a city of " + civName(e.city().key().owner()) + ".", ChatFormatting.GOLD, "city", e.city().at());
 					}
 				}
 			}
@@ -656,7 +663,7 @@ final class LivingWorldServer {
 				if (!quiet) {
 					for (String wonder : e.city().wonders()) {
 						if (!e.before().wonders().contains(wonder)) {
-							announce(e.city().name() + " completed a wonder: " + Gameplay.words(wonder) + ".", ChatFormatting.GOLD);
+							announce(e.city().name() + " completed a wonder: " + Gameplay.words(wonder) + ".", ChatFormatting.GOLD, "wonder", e.city().at());
 						}
 					}
 				}
@@ -666,7 +673,7 @@ final class LivingWorldServer {
 				WorldState now = told();
 				boolean taken = builtin && now != null && e.city().key().owner() == now.session().viewer();
 				announce(e.city().name() + " now belongs to " + civName(e.city().key().owner()) + " (was " + civName(e.before().key().owner()) + ").",
-					taken ? ChatFormatting.GOLD : ChatFormatting.RED);
+					taken ? ChatFormatting.GOLD : ChatFormatting.RED, "war", e.city().at());
 				if (taken && !quiet) {
 					// The question every conqueror is asked, put at once; it can be answered later at the city's governor as well.
 					for (ServerPlayer player : listeners()) {
@@ -677,13 +684,13 @@ final class LivingWorldServer {
 			}
 			case WorldEvent.CityGone e -> {
 				mark(e.last().at());
-				announce(e.last().name() + " is gone.", ChatFormatting.RED);
+				announce(e.last().name() + " is gone.", ChatFormatting.RED, "war", e.last().at());
 			}
 			case WorldEvent.WarChanged e -> announce(e.atWar() ? "War! " + e.civ().name() + " and you are now at war." : "Peace with " + e.civ().name() + ".",
-				e.atWar() ? ChatFormatting.RED : ChatFormatting.GREEN);
+				e.atWar() ? ChatFormatting.RED : ChatFormatting.GREEN, e.atWar() ? "war" : "peace", null);
 			case WorldEvent.TurnChanged e -> {
 				WorldState now = told();
-				announce("Turn " + e.to() + (now != null && now.empire() != null ? ", " + now.empire().yearText() : "") + ".", ChatFormatting.GRAY);
+				announce("Turn " + e.to() + (now != null && now.empire() != null ? ", " + now.empire().yearText() : "") + ".", ChatFormatting.GRAY, "turn", null);
 			}
 			case WorldEvent.CivChanged e -> {
 				// A civ's era or colours changed: its cities are built differently now.
@@ -700,16 +707,16 @@ final class LivingWorldServer {
 				for (String tech : e.techs()) {
 					String unlocks = techGate ? nl.jordythomassen.livingworld.gameplay.TechGate.unlocks(tech) : null;
 					announce("Your civilization discovered " + Gameplay.words(tech) + "." + (unlocks == null ? "" : " You can now craft " + unlocks + "."),
-						ChatFormatting.AQUA);
+						ChatFormatting.AQUA, "tech", null);
 				}
 			}
 			case WorldEvent.Notice e -> {
 				if (!quiet) {
-					announce(e.text(), ChatFormatting.WHITE);
+					announce(e.text(), ChatFormatting.WHITE, e.kind(), e.at());
 				}
 			}
 			case WorldEvent.EraChanged e -> announce("A new age: your civilization enters the " + Gameplay.words(e.to().replace("ERA_", "")) + " era.",
-				ChatFormatting.GOLD);
+				ChatFormatting.GOLD, "era", null);
 			default -> {
 			}
 		}
@@ -743,9 +750,16 @@ final class LivingWorldServer {
 	}
 
 	private void announce(String text, ChatFormatting color) {
+		announce(text, color, "news", null);
+	}
+
+	/** News for whoever it concerns: in the chat of who walks, and at the side of the screen of who rules from above, with its kind and its place. */
+	private void announce(String text, ChatFormatting color, String kind, PlotCoord at) {
 		for (ServerPlayer player : listeners()) {
-			player.sendSystemMessage(Component.literal("[Civ] " + text).withStyle(color));
-			rts.tell(player, text);
+			if (!rts.isAbove(player)) {
+				player.sendSystemMessage(Component.literal("[Civ] " + text).withStyle(color));
+			}
+			rts.tell(player, text, kind, at);
 		}
 	}
 
@@ -783,11 +797,24 @@ final class LivingWorldServer {
 	}
 
 	void sendHome(ServerPlayer player) {
+		if (builtin && ruler.home(player)) {
+			return;
+		}
 		double[] home = home();
 		player.teleportTo(server.overworld(), home[0], home[1], home[2], Set.of(), 180f, 0f, false);
 	}
 
+	/** Takes a player to a hex they asked to go to. A ruler goes on foot beyond their own land: they are set down on their own only. */
 	void teleport(ServerPlayer player, PlotCoord plot) {
+		if (builtin && seats.of(player) >= 0 && !ruler.mayStandOn(player, plot)) {
+			say(player, "You can be set down on your own land only. Beyond it you walk.");
+			return;
+		}
+		place(player, plot);
+	}
+
+	/** Sets a player down on a hex, whoever's it is. */
+	void place(ServerPlayer player, PlotCoord plot) {
 		int x = model.centerX(plot);
 		int z = model.centerZ(plot) + 3;
 		player.teleportTo(server.overworld(), x + 0.5, model.standY(x, z), z + 0.5, Set.of(), 180f, 0f, false);
@@ -983,6 +1010,7 @@ final class LivingWorldServer {
 		seats.left(player);
 		lobby.forget(player);
 		rts.forget(player);
+		ruler.forget(player);
 		bar.removePlayer(player);
 		lastPlotLine.remove(player.getUUID());
 		lastUse.remove(player.getUUID());
@@ -1456,7 +1484,9 @@ final class LivingWorldServer {
 				}
 				PlotCoord here = model == null ? null : model.plotAt(p.getBlockX(), p.getBlockZ());
 				if (!unit.at().equals(here)) {
-					menu.button("Go to it", "Takes you to where it stands", who -> teleport(who, unit.at()));
+					if (!builtin || ruler.mayStandOn(p, unit.at())) {
+						menu.button("Go to it", "Takes you to where it stands", who -> teleport(who, unit.at()));
+					}
 					menu.button("Come to me", "It walks to the hex you stand in", who -> escort(who, key));
 				}
 				if (unit.hp() < unit.maxHp()) {
@@ -1727,8 +1757,13 @@ final class LivingWorldServer {
 		String id = Long.toString(System.currentTimeMillis(), 36) + "-" + (++commandCounter);
 		GameCommand command = new GameCommand(id, once == null ? id : once, state.session().bootId(), state.session().gameId(), player.getName().getString(),
 			state.turn(), op, target, plot, amount, item);
+		if (answerNext != null) {
+			answered.put(id, answerNext);
+			answerNext = null;
+		}
 		CommandTicket ticket = link.submit(civ, command);
 		if (!ticket.command().id().equals(id)) {
+			answered.remove(id);
 			// Already asked: nothing new was started.
 			if (!quiet) {
 				say(player, what + " is already under way.");
@@ -1926,7 +1961,32 @@ final class LivingWorldServer {
 		}
 	}
 
+	/** What is done when a request has been answered, by its number: for whoever acts on how it ended. */
+	private final Map<String, java.util.function.Consumer<CommandTicket>> answered = new HashMap<>();
+	private java.util.function.Consumer<CommandTicket> answerNext;
+
+	/** Hands in a request like {@link #submit}, and runs {@code then} on the server thread when the game has said how it ended. */
+	void submitThen(ServerPlayer player, CommandOp op, EntityKey target, PlotCoord plot, int amount, String what, String item, java.util.function.Consumer<CommandTicket> then) {
+		answerNext = then;
+		try {
+			submit(player, op, target, plot, amount, null, what, null, item, false);
+		} finally {
+			answerNext = null;
+		}
+	}
+
 	private void finished(CommandTicket ticket) {
+		java.util.function.Consumer<CommandTicket> then = answered.remove(ticket.command().id());
+		try {
+			finishedQuietly(ticket);
+		} finally {
+			if (then != null) {
+				then.accept(ticket);
+			}
+		}
+	}
+
+	private void finishedQuietly(CommandTicket ticket) {
 		Refund asked = refunds.get(ticket.command().id());
 		ServerPlayer who = asked == null ? null : server.getPlayerList().getPlayer(asked.player());
 		ServerPlayer before = acting;
@@ -1992,6 +2052,11 @@ final class LivingWorldServer {
 					if (ticket.command().op() != CommandOp.END_TURN && ticket.command().op() != CommandOp.CITY_ADD_PRODUCTION) {
 						String numbers = ticket.command().op() == CommandOp.UNIT_HEAL ? " Health went from " + ticket.before() + " to " + ticket.after() + "." : "";
 						player.sendOverlayMessage(Component.literal(refund.what() + ": " + result + numbers));
+						if (ticket.command().op() == CommandOp.CHOICE && !rts.isAbove(player)
+							&& (ticket.command().item().startsWith("strike:") || ticket.command().item().startsWith("ruler:") || ticket.command().item().startsWith("pay:"))) {
+							// What a ruler did in person stays to be read: a fight goes fast.
+							player.sendSystemMessage(Component.literal(result).withStyle(ChatFormatting.GOLD));
+						}
 					}
 					LivingWorldMod.LOG.info("Living World: {}: {}", refund.what(), result);
 					return;

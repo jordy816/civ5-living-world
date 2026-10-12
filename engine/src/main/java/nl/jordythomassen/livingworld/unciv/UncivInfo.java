@@ -112,7 +112,7 @@ final class UncivInfo {
 		return !line.isEmpty();
 	}
 
-	private static String rules(Collection<String> uniques) {
+	static String rules(Collection<String> uniques) {
 		List<String> plain = new ArrayList<>();
 		for (String unique : uniques) {
 			String words = UncivLink.words(unique);
@@ -256,7 +256,7 @@ final class UncivInfo {
 	}
 
 	/** What a unit is in numbers, each before its measure: the screen draws the measures as pictures. */
-	private static String numbers(BaseUnit unit) {
+	static String numbers(BaseUnit unit) {
 		StringBuilder head = new StringBuilder();
 		if (unit.getStrength() > 0) {
 			head.append(unit.getStrength()).append(" Strength   ");
@@ -647,6 +647,90 @@ final class UncivInfo {
 				line(out, rank == 1 ? GOOD : TEXT, UncivLink.words(type.name()) + ": " + mine + "   #" + rank + " of " + known.size() + (rank == 1 ? "" : "   (" + bestName + " " + best + ")"));
 			} catch (Throwable e) {
 				// A measure Unciv only has with its screens is left out.
+			}
+		}
+		return out;
+	}
+
+	/**
+	 * One city of the player's as a sheet of numbers, for a screen that draws it rather than writes it out. Each row
+	 * says what it is in its type:
+	 * <ul>
+	 * <li>YIELD: the name the measure, the id tenths of it a turn</li>
+	 * <li>PEOPLE: id the citizens, group those without work, turns the specialists</li>
+	 * <li>GROW: id the food stored, group the food needed, turns until it grows (below zero: until it starves; zero: neither)</li>
+	 * <li>BUILD: the name what is built (empty: nothing), id the work done, group the work it takes, turns left</li>
+	 * <li>BORDER: id the culture stored, group the culture needed, turns until the border grows (zero: never)</li>
+	 * <li>DEFENCE: id the health, group the most health, turns the strength; the name "fire" when it can fire this turn</li>
+	 * <li>FAITH: the name the religion most follow (empty: none), id its followers, group the citizens</li>
+	 * <li>QUEUE: the name what is lined up, id its place, turns it takes</li>
+	 * <li>GREAT: the name the kind of Great Person, id the points had, group the points needed, turns the points a turn</li>
+	 * <li>BUILDING: the name, a bar, what it does in brief; id its upkeep, group 1 for a wonder of the world, 2 for a national one</li>
+	 * <li>HAPPY: the name where it comes from, turns the faces (below zero: unhappy)</li>
+	 * </ul>
+	 */
+	List<Records.Option> sheet(int id) {
+		List<Records.Option> out = new ArrayList<>();
+		City city = actions.ownCity(id);
+		if (city == null) {
+			return out;
+		}
+		Stats stats = city.getCityStats().getCurrentCityStats();
+		String[] measures = { "Food", "Production", "Gold", "Science", "Culture", "Faith" };
+		float[] values = { stats.getFood(), stats.getProduction(), stats.getGold(), stats.getScience(), stats.getCulture(), stats.getFaith() };
+		for (int i = 0; i < measures.length; i++) {
+			if (i < 5 || game.isReligionEnabled()) {
+				out.add(new Records.Option(0, Math.round(values[i] * 10), "YIELD", measures[i], 0));
+			}
+		}
+		var people = city.getPopulation();
+		out.add(new Records.Option(people.getFreePopulation(), people.getPopulation(), "PEOPLE", "", people.getNumberOfSpecialists()));
+		Integer grows = people.getNumTurnsToNewPopulation();
+		Integer starves = people.getNumTurnsToStarvation();
+		out.add(new Records.Option(people.getFoodToNextPopulation(), people.getFoodStored(), "GROW", "",
+			city.isStarving() ? -(starves == null ? 1 : Math.max(1, starves)) : grows == null ? 0 : Math.max(1, grows)));
+		var constructions = city.getCityConstructions();
+		String current = constructions.currentConstructionName();
+		if (current == null || current.isEmpty()) {
+			out.add(new Records.Option(0, 0, "BUILD", "", 0));
+		} else if (PerpetualConstruction.Companion.getPerpetualConstructionsMap().containsKey(current)) {
+			out.add(new Records.Option(0, 0, "BUILD", UncivLink.words(current), 0));
+		} else {
+			int done = constructions.getWorkDone(current);
+			out.add(new Records.Option(done + constructions.getRemainingWork(current, false), done, "BUILD", UncivLink.words(current), constructions.turnsToConstruction(current, true)));
+		}
+		int needed = city.getExpansion().getCultureToNextTile();
+		int stored = city.getExpansion().getCultureStored();
+		out.add(new Records.Option(needed, stored, "BORDER", "", stats.getCulture() > 0 ? Math.max(1, (int) Math.ceil((needed - stored) / stats.getCulture())) : 0));
+		out.add(new Records.Option(city.getMaxHealth$Unciv_core(), city.getHealth(), "DEFENCE", city.canBombard() ? "fire" : "", new CityCombatant(city).getDefendingStrength(null)));
+		if (game.isReligionEnabled()) {
+			Religion held = city.getReligion().getMajorityReligion();
+			out.add(new Records.Option(people.getPopulation(), held == null ? 0 : city.getReligion().getFollowersOfMajorityReligion(), "FAITH",
+				held == null ? "" : UncivLink.words(held.getReligionDisplayName()), 0));
+		}
+		List<String> queue = constructions.getConstructionQueue();
+		for (int i = 1; i < queue.size(); i++) {
+			String name = queue.get(i);
+			out.add(new Records.Option(0, i, "QUEUE", UncivLink.words(name),
+				PerpetualConstruction.Companion.getPerpetualConstructionsMap().containsKey(name) ? 0 : constructions.turnsToConstruction(name, true)));
+		}
+		for (Map.Entry<String, Integer> entry : city.getGreatPersonPoints().entrySet()) {
+			out.add(new Records.Option(viewer.getGreatPeople().getPointsRequiredForGreatPerson(entry.getKey()), viewer.getGreatPeople().getGreatPersonPointsCounter().get(entry.getKey()),
+				"GREAT", UncivLink.words(entry.getKey()), entry.getValue()));
+		}
+		for (Building building : built(city)) {
+			String effect;
+			try {
+				effect = lines(building.getShortDescription(true, unique -> true)).replace("\n", "; ");
+			} catch (Throwable e) {
+				effect = rules(building.getUniques()).replace("\n", "; ");
+			}
+			out.add(new Records.Option(building.isWonder() ? 1 : building.isNationalWonder() ? 2 : 0, building.getMaintenance(), "BUILDING",
+				UncivLink.words(building.getName()) + "|" + effect, 0));
+		}
+		for (Map.Entry<String, Float> entry : city.getCityStats().getHappinessList().entrySet()) {
+			if (Math.abs(entry.getValue()) >= 0.5f) {
+				out.add(new Records.Option(0, 0, "HAPPY", UncivLink.words(entry.getKey()), Math.round(entry.getValue())));
 			}
 		}
 		return out;

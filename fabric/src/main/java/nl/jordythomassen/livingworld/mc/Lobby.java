@@ -17,9 +17,11 @@ import nl.jordythomassen.livingworld.unciv.UncivLink;
 
 /**
  * Before the game, and at its door: what game is played and who leads whom. A world without a
- * game shows everybody the same table: each picks a civilization, whoever keeps the world sets
- * the map and the rules and begins. In a game that runs, a newcomer chooses a civilization to
- * take over, somebody to rule along with, or to look on.
+ * game shows everybody the same table, in two steps. First the game: whoever keeps the world sets
+ * the map and the rules, and the others watch it take shape. Then the lobby: everybody who has
+ * come in picks a civilization and says when they are ready, and the keeper begins (a count of
+ * three, that anybody stops by not being ready after all). In a game that runs, a newcomer chooses
+ * a civilization to take over, somebody to rule along with, or to look on.
  */
 final class Lobby {
 	private static final List<String> SIZES = List.of("Tiny", "Small", "Medium", "Large", "Huge");
@@ -46,6 +48,12 @@ final class Lobby {
 	private List<Records.Option> nationList = List.of();
 	private boolean asked;
 	private boolean starting;
+	/** The game is set and the lobby is open: people choose and say when they are ready. */
+	private boolean open;
+	private final Set<UUID> ready = new HashSet<>();
+	/** Ticks until the game begins, or -1 when nobody has said begin. */
+	private int countdown = -1;
+	private UUID beginner;
 
 	Lobby(LivingWorldServer session) {
 		this.session = session;
@@ -77,6 +85,9 @@ final class Lobby {
 
 	/** Whether this player may set the game up and begin it: whoever keeps the world, or the first one in when nobody who does is here. */
 	boolean keeps(ServerPlayer player) {
+		if (player == standIn) {
+			return true;
+		}
 		if (session.server.isSingleplayerOwner(player.nameAndId()) || session.server.getPlayerList().isOp(player.nameAndId())) {
 			return true;
 		}
@@ -92,8 +103,40 @@ final class Lobby {
 	void forget(ServerPlayer player) {
 		setting.remove(player.getUUID());
 		greeted.remove(player.getUUID());
+		ready.remove(player.getUUID());
+		if (player.getUUID().equals(beginner)) {
+			countdown = -1;
+		}
 		if (session.inLobby()) {
 			nations.remove(player.getUUID());
+			showAll();
+		}
+	}
+
+	/** For the self-test, which has nobody on the server: who stands in for the keeper of the world. */
+	ServerPlayer standIn;
+
+	/** For the self-test: where the table is. */
+	String where() {
+		return (open ? "lobby" : "game") + ", " + ready.size() + " ready" + (countdown >= 0 ? ", begins" : "");
+	}
+
+	/** Once a tick: the count before a game begins. */
+	void tick() {
+		if (countdown < 0) {
+			return;
+		}
+		ServerPlayer keeper = beginner == null ? null : session.server.getPlayerList().getPlayer(beginner);
+		if (keeper == null || !session.inLobby() || starting) {
+			countdown = -1;
+			showAll();
+			return;
+		}
+		countdown--;
+		if (countdown <= 0) {
+			countdown = -1;
+			start(keeper);
+		} else if (countdown % 20 == 0) {
 			showAll();
 		}
 	}
@@ -101,6 +144,9 @@ final class Lobby {
 	/** A new game began (or was loaded): the table is cleared. */
 	void gameStarted() {
 		starting = false;
+		open = false;
+		ready.clear();
+		countdown = -1;
 		setting.clear();
 		for (ServerPlayer player : session.server.getPlayerList().getPlayers()) {
 			if (Rts.speaks(player)) {
@@ -115,6 +161,8 @@ final class Lobby {
 			return false;
 		}
 		if (session.inLobby()) {
+			// Everybody at the table sees who came in.
+			showAll();
 			show(player);
 			return true;
 		}
@@ -176,10 +224,20 @@ final class Lobby {
 		for (Setting setting : settings) {
 			rows.add(new Records.Option(0, index++, setting.key(), setting.label() + "|" + values.get(setting.key()) + "|" + setting.tip(), keeps ? 1 : 0));
 		}
+		String keeper = "";
 		for (ServerPlayer other : session.server.getPlayerList().getPlayers()) {
-			rows.add(new Records.Option(1, other == player ? 1 : 0, other.getName().getString(), nations.getOrDefault(other.getUUID(), ""), keeps(other) ? 1 : 0));
+			// The last number: 1 keeps the world, 2 is ready.
+			rows.add(new Records.Option(1, other == player ? 1 : 0, other.getName().getString(), nations.getOrDefault(other.getUUID(), ""),
+				(keeps(other) ? 1 : 0) | (ready.contains(other.getUUID()) ? 2 : 0)));
+			if (keeper.isEmpty() && keeps(other)) {
+				keeper = other.getName().getString();
+			}
 		}
 		rows.add(new Records.Option(2, keeps ? 1 : 0, "me", nations.getOrDefault(player.getUUID(), ""), starting ? 1 : 0));
+		// Which step the table is at (1 the game, 2 the lobby), who keeps it, how friends come in, whether this player is
+		// ready, and the seconds left before it begins (-1: nobody said begin).
+		rows.add(new Records.Option(2, open ? 2 : 1, "stage", keeper + "|" + (session.server.isDedicatedServer() ? "server" : session.server.isPublished() ? "lan" : "alone") + "|"
+			+ (ready.contains(player.getUUID()) ? 1 : 0), countdown < 0 ? -1 : (countdown + 19) / 20));
 		WorldState board = session.board();
 		if (board != null && !session.inLobby()) {
 			rows.add(new Records.Option(2, 0, "game", running(board), 0));
@@ -241,14 +299,39 @@ final class Lobby {
 			return;
 		}
 		if (table) {
+			if (text.startsWith("stage:") && keeps(player)) {
+				// On to the lobby, or back to the game itself. Going back, nobody is ready any more: the game may change.
+				open = text.equals("stage:2");
+				countdown = -1;
+				if (!open) {
+					ready.clear();
+				}
+				showAll();
+				show(player);
+				return;
+			}
+			if (text.equals("ready")) {
+				if (!ready.remove(id)) {
+					ready.add(id);
+				} else {
+					countdown = -1;
+				}
+				showAll();
+				show(player);
+				return;
+			}
 			if (text.startsWith("nation:")) {
 				String wanted = text.substring(7);
 				if (wanted.isEmpty() || nationList.stream().anyMatch(n -> n.type().equals(wanted))) {
 					// Two people cannot lead the same civilization from the start; the later one is told.
 					if (!wanted.isEmpty() && session.inLobby() && nations.entrySet().stream().anyMatch(e -> !e.getKey().equals(id) && e.getValue().equals(wanted))) {
 						LivingWorldServer.say(player, wanted + " is taken already.");
-					} else {
+					} else if (!wanted.equals(nations.getOrDefault(id, ""))) {
 						nations.put(id, wanted);
+						// Another choice is another thought: ready is said anew.
+						if (ready.remove(id)) {
+							countdown = -1;
+						}
 					}
 				}
 				showAll();
@@ -262,6 +345,9 @@ final class Lobby {
 						int at = setting.choices().indexOf(values.get(key));
 						int size = setting.choices().size();
 						values.put(key, setting.choices().get(((at + (text.startsWith("next:") ? 1 : -1)) % size + size) % size));
+						// The game changed under them: whoever was ready says so again.
+						ready.clear();
+						countdown = -1;
 					}
 				}
 				showAll();
@@ -269,7 +355,18 @@ final class Lobby {
 				return;
 			}
 			if (text.equals("start") && keeps(player) && !starting) {
-				start(player);
+				if (countdown >= 0) {
+					// Said begin twice: not yet after all.
+					countdown = -1;
+					showAll();
+				} else if (open && session.inLobby() && session.server.getPlayerList().getPlayers().size() > 1) {
+					// With others at the table everybody sees it coming: a count of three.
+					beginner = id;
+					countdown = 60;
+					showAll();
+				} else {
+					start(player);
+				}
 			}
 			return;
 		}

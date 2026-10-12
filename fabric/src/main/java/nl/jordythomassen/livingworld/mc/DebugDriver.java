@@ -116,7 +116,7 @@ final class DebugDriver {
 			if (options.isEmpty()) {
 				forSale(who, candidates);
 			} else {
-				session.teleport(who, plot);
+				session.place(who, plot);
 				LivingWorldMod.LOG.info("DEBUG land for sale at {}: {} for {} gold", plot, options.get(0).name(), options.get(0).turns());
 			}
 		});
@@ -125,13 +125,44 @@ final class DebugDriver {
 	private void run(ServerPlayer player, String[] w) {
 		switch (w[0]) {
 			case "home" -> session.sendHome(player);
+			// tofoe: on foot, fourteen blocks south of the nearest enemy unit and facing it: near enough for its soldiers to step out.
+			case "tofoe" -> {
+				var state = session.stateOf(player);
+				int civ = session.seats.of(player);
+				var here = session.model().plotAt(player.getBlockX(), player.getBlockZ());
+				var foe = state.units().values().stream().filter(u -> u.key().owner() != civ && u.combat() && state.civ(u.key().owner()) != null
+					&& (state.civ(u.key().owner()).barbarian() || state.civ(u.key().owner()).atWarWithViewer()))
+					.min(java.util.Comparator.comparingInt(u -> here == null ? 0 : state.session().grid().distance(here, u.at()))).orElseThrow(() -> new IllegalStateException("no enemy unit in sight"));
+				int x = session.model().centerX(foe.at());
+				int z = session.model().centerZ(foe.at()) + 14;
+				player.teleportTo(session.server.overworld(), x + 0.5, session.model().standY(x, z), z + 0.5, java.util.Set.of(), 180f, 0f, false);
+				LivingWorldMod.LOG.info("DEBUG before {} at {} ({} health)", foe.name(), foe.at(), foe.hp());
+			}
+			// strike: one of the soldiers that are out falls to the player's hand. fall: the player falls. arms X: what the arms page's button X does.
+			case "strike" -> {
+				var id = session.ruler.anySoldier();
+				var soldier = id == null ? null : session.server.overworld().getEntity(id);
+				if (!(soldier instanceof net.minecraft.world.entity.LivingEntity living)) {
+					throw new IllegalStateException("no soldier is out");
+				}
+				living.hurtServer(session.server.overworld(), session.server.overworld().damageSources().playerAttack(player), 1000f);
+			}
+			case "fall" -> player.hurtServer(session.server.overworld(), session.server.overworld().damageSources().generic(), 1000f);
+			case "arms" -> {
+				if (w.length == 1) {
+					session.ruler.armsMenu(player, 0xE0B040);
+				} else {
+					session.ruler.buyByName(player, String.join(" ", java.util.Arrays.copyOfRange(w, 1, w.length)));
+				}
+			}
+			case "fights" -> LivingWorldMod.LOG.info("DEBUG fights {} soldiers {} figure {}", session.ruler.fights(), session.ruler.soldiers(), session.ruler.hasFigure(player));
 			// Something to carry to a city: what a walk over one's own land would have gathered.
 			case "pack" -> {
 				player.getInventory().add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.OAK_LOG, 6));
 				player.getInventory().add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.WHEAT, 6));
 				player.getInventory().add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.RAW_GOLD, 3));
 			}
-			case "goto" -> session.teleport(player, new PlotCoord(Integer.parseInt(w[1]), Integer.parseInt(w[2])));
+			case "goto" -> session.place(player, new PlotCoord(Integer.parseInt(w[1]), Integer.parseInt(w[2])));
 			case "stop" -> session.server.halt(false);
 			case "simulate" -> ((nl.jordythomassen.livingworld.unciv.UncivLink) session.link).simulate(Integer.parseInt(w[1]));
 			case "above" -> session.lookFromAbove(player);
@@ -493,7 +524,7 @@ final class DebugDriver {
 				}
 				long unknown = grid.neighbors(best).stream().filter(n -> !state.plot(n).revealed()).count();
 				LivingWorldMod.LOG.info("DEBUG frontier {} with {} unknown neighbours", best, unknown);
-				session.teleport(player, best);
+				session.place(player, best);
 			}
 			case "empire" -> {
 				var state = session.state();
@@ -532,7 +563,7 @@ final class DebugDriver {
 					var plot = state.plot(n);
 					boolean taken = state.units().values().stream().anyMatch(u -> u.at().equals(n));
 					if (plot.revealed() && !plot.water() && !plot.city() && plot.elevation() != nl.jordythomassen.livingworld.state.PlotState.MOUNTAIN && !taken) {
-						session.teleport(player, n);
+						session.place(player, n);
 						return;
 					}
 				}

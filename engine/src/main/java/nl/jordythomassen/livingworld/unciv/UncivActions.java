@@ -1064,7 +1064,92 @@ final class UncivActions {
 			}
 			return Result.refused("That Great Person is not on offer.");
 		}
+		if (item.startsWith("strike:")) {
+			return strike(command);
+		}
+		if (item.equals("ruler:fell")) {
+			// The ruler fell on foot. Their people carry them home, and it costs the treasury: a tenth of it, never more than a hundred.
+			int before = viewer.getGold();
+			int loss = Math.max(0, Math.min(FALL_COSTS_AT_MOST, before / 10));
+			viewer.addGold(-loss);
+			return Result.done(loss > 0 ? "You fell. Your people carried you home; it cost " + loss + " Gold." : "You fell. Your people carried you home.", before, viewer.getGold());
+		}
+		if (item.startsWith("pay:")) {
+			// "pay:<what for>": the amount is the price in gold. For what a ruler buys for themselves.
+			int price = command.amount();
+			int before = viewer.getGold();
+			if (price < 1 || price > 5000) {
+				return Result.refused("That is not for sale.");
+			}
+			if (before < price) {
+				return Result.refused("That costs " + price + " Gold; the treasury holds " + before + ".");
+			}
+			viewer.addGold(-price);
+			return Result.done(item.substring(4) + ": -" + price + " Gold", before, viewer.getGold());
+		}
 		return Result.refused("That is not possible yet.");
+	}
+
+	/** The most health one enemy unit loses to a ruler's own hands in a turn: then what is left of it pulls back. */
+	static final int STRIKE_PER_UNIT = 60;
+	/** The most health all enemy units together lose to a ruler's own hands in a turn. */
+	static final int STRIKE_PER_TURN = 150;
+	/** What a ruler's fall costs the treasury at most. */
+	static final int FALL_COSTS_AT_MOST = 100;
+	private final Map<Integer, Integer> struck = new HashMap<>();
+	private int struckTurn = -1;
+
+	/**
+	 * A ruler on foot has beaten soldiers of an enemy unit: "strike:" with the unit as the target and the health it
+	 * costs as the amount. Only an enemy can be struck (the barbarians, or a civilization at war with the ruler's),
+	 * and only so much in a turn: a ruler helps a fight along, an army wins it. A unit that loses its last health
+	 * this way is gone, and what it carried is the ruler's.
+	 */
+	private Result strike(GameCommand command) {
+		MapUnit foe = command.target() == null ? null : snapshot.unit(command.target());
+		if (foe == null || foe.getCiv() == viewer) {
+			return Result.refused("That unit is gone.");
+		}
+		Civilization owner = foe.getCiv();
+		if (!owner.isBarbarian() && !viewer.isAtWarWith(owner)) {
+			return Result.refused("You are not at war with " + UncivLink.words(owner.getCivName()) + ".");
+		}
+		if (struckTurn != game.getTurns()) {
+			struck.clear();
+			struckTurn = game.getTurns();
+		}
+		int all = 0;
+		for (int amount : struck.values()) {
+			all += amount;
+		}
+		String name = UncivLink.words(foe.getName());
+		int room = Math.min(STRIKE_PER_UNIT - struck.getOrDefault(foe.getId(), 0), STRIKE_PER_TURN - all);
+		if (room <= 0) {
+			return Result.refused(all >= STRIKE_PER_TURN ? "You have fought enough for one turn." : "What is left of the " + name + " keeps out of your reach until the next turn.");
+		}
+		int amount = Math.max(1, Math.min(room, command.amount()));
+		int before = foe.getHealth();
+		int strength = foe.getBaseUnit().getStrength();
+		struck.merge(foe.getId(), amount, Integer::sum);
+		foe.takeDamage(amount);
+		if (before - amount <= 0) {
+			int loot = foe.isCivilian() ? 0 : Math.min(20, 5 + strength / 2);
+			viewer.addGold(loot);
+			return Result.done("The " + name + " fell to your own hand." + (loot > 0 ? " +" + loot + " Gold" : ""), before, 0);
+		}
+		return Result.done(name + ": -" + amount + " health by your own hand", before, before - amount);
+	}
+
+	/** How much health an enemy unit can still lose to the ruler's hands this turn. */
+	int strikeRoom(MapUnit foe) {
+		if (struckTurn != game.getTurns()) {
+			return STRIKE_PER_UNIT;
+		}
+		int all = 0;
+		for (int amount : struck.values()) {
+			all += amount;
+		}
+		return Math.max(0, Math.min(STRIKE_PER_UNIT - struck.getOrDefault(foe.getId(), 0), STRIKE_PER_TURN - all));
 	}
 
 	// ---- what the game offers ----
@@ -1083,7 +1168,7 @@ final class UncivActions {
 					String name = (String) entry.getValue()[0];
 					int group = (Integer) entry.getValue()[1];
 					if (!buying) {
-						out.add(new Records.Option(group, index++, entry.getKey(), name, group == 3 ? 0 : city.getCityConstructions().turnsToConstruction(name, false)));
+						out.add(new Records.Option(group, index++, entry.getKey(), name, group == 3 ? 0 : city.getCityConstructions().turnsToConstruction(name, true)));
 					} else if (city.getCityConstructions().getConstruction$Unciv_core(name) instanceof INonPerpetualConstruction thing
 						&& thing.canBePurchasedWithStat(city, Stat.Gold)) {
 						Integer cost = thing.getStatBuyCost(city, Stat.Gold);
@@ -1293,7 +1378,7 @@ final class UncivActions {
 					List<String> queue = city.getCityConstructions().getConstructionQueue();
 					for (int i = 0; i < queue.size(); i++) {
 						String name = queue.get(i);
-						int turns = PerpetualConstruction.Companion.getPerpetualConstructionsMap().containsKey(name) ? 0 : city.getCityConstructions().turnsToConstruction(name, false);
+						int turns = PerpetualConstruction.Companion.getPerpetualConstructionsMap().containsKey(name) ? 0 : city.getCityConstructions().turnsToConstruction(name, true);
 						out.add(new Records.Option(25, i, name, name, turns));
 					}
 				}
@@ -1328,6 +1413,15 @@ final class UncivActions {
 			case "victory" -> out.addAll(info.victory());
 			case "happiness" -> out.addAll(info.happiness());
 			case "cityinfo" -> out.addAll(info.city(a));
+			case "citysheet" -> out.addAll(info.sheet(a));
+			case "foe" -> {
+				// An enemy unit a ruler on foot could fight (a its number, c whose it is): the id is the health it can still
+				// lose to their hands this turn, the last number its health. Nothing when it is no enemy.
+				MapUnit foe = snapshot.unit(new EntityKey(c, a));
+				if (foe != null && foe.getCiv() != viewer && (foe.getCiv().isBarbarian() || viewer.isAtWarWith(foe.getCiv()))) {
+					out.add(new Records.Option(31, strikeRoom(foe), "foe", UncivLink.words(foe.getName()), foe.getHealth()));
+				}
+			}
 			case "view" -> {
 				// Everything the view from above shows beside the picture of the world, in one answer: what the unit in hand can do
 				// and reach, how many proposals wait (group 30), the empire's other numbers and that unit's promotions.

@@ -28,7 +28,9 @@ public final class RtsCamera {
 	 * How high the player hangs. Where exactly makes no difference to the picture (the projection
 	 * is flat), but the world is loaded around the player, so not far from the point looked at.
 	 */
-	static final double PLAYER_Y = BoardModel.LAND + 36;
+	static final double PLAYER_Y = nl.jordythomassen.livingworld.board.Overlook.HANG_Y;
+	/** Ticks spent waiting for a server to lift the player to that height (see steer). */
+	private static int waitingForHeight;
 	/** The height at which clicks and outlines meet the land. */
 	static final double GROUND_Y = BoardModel.LAND + 1;
 
@@ -167,6 +169,13 @@ public final class RtsCamera {
 			// A server that is not the player's own takes a move of more than ten blocks in a tick for cheating and puts the
 			// player back. A leap (home, the small map, a banner) is therefore asked of the server, which then moves the
 			// player itself; anything else is taken in steps the server accepts, the view catching up over a few ticks.
+			// The height is the server's to give: it lifts whoever looks from above (at the table before a game, coming
+			// in, coming back up). A leap up there made from here would be put back, tick after tick. Should a server
+			// not do it (an older one), the leap is tried after all rather than leaving the view hanging.
+			if (Math.abs(player.getY() - PLAYER_Y) > 8.0 && waitingForHeight++ < 60) {
+				return;
+			}
+			waitingForHeight = 0;
 			double jump = Math.hypot(toX - player.getX(), toZ - player.getZ());
 			if (leapt) {
 				leapt = false;

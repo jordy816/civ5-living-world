@@ -883,7 +883,9 @@ public final class UncivLink implements GameLink {
 
 	/**
 	 * The civilizations a game can be played with, before there is one: the type is the name, the
-	 * name what is special about it (lines apart, the leader first), the group and id its two colours.
+	 * group and id its two colours, and the name what is special about it, in lines a screen can lay out:
+	 * the leader first, then "Gift: name", "- " before each thing the gift does, and "Unit: ", "Building: " or
+	 * "Improvement: " before what only they have (the name, a bar, what it stands in for, a bar, what it does).
 	 */
 	private List<Records.Option> nations() {
 		List<Records.Option> out = new ArrayList<>();
@@ -896,21 +898,43 @@ public final class UncivLink implements GameLink {
 				continue;
 			}
 			StringBuilder text = new StringBuilder(nation.getLeaderName());
-			String gift = nation.getUniqueText().isEmpty() ? UncivInfo.lines(String.join("\n", nation.getUniques())).replace("\n", "; ") : words(nation.getUniqueText());
-			text.append('\n').append(nation.getUniqueName().isEmpty() ? "" : words(nation.getUniqueName()) + ": ").append(gift);
+			text.append("\nGift: ").append(nation.getUniqueName().isEmpty() ? "Their own way" : words(nation.getUniqueName()));
+			String gift = nation.getUniqueText().isEmpty() ? UncivInfo.rules(nation.getUniques()) : words(nation.getUniqueText());
+			for (String line : gift.split("\n")) {
+				if (!line.isEmpty()) {
+					text.append("\n- ").append(line);
+				}
+			}
 			for (var unit : rules.getUnits().values()) {
 				if (nation.getName().equals(unit.getUniqueTo())) {
-					text.append('\n').append(words(unit.getName())).append(unit.getReplaces() == null ? "" : ", their " + words(unit.getReplaces()));
+					var old = unit.getReplaces() == null ? null : rules.getUnits().get(unit.getReplaces());
+					List<String> own = new ArrayList<>();
+					for (String unique : unit.getUniques()) {
+						if (old == null || !old.getUniques().contains(unique)) {
+							own.add(unique);
+						}
+					}
+					String does = UncivInfo.rules(own).replace("\n", "; ");
+					text.append("\nUnit: ").append(words(unit.getName())).append('|').append(unit.getReplaces() == null ? "" : words(unit.getReplaces())).append('|')
+						.append(UncivInfo.numbers(unit).replaceAll("\\s{2,}", ", ")).append(does.isEmpty() ? "" : "; " + does);
 				}
 			}
 			for (var building : rules.getBuildings().values()) {
 				if (nation.getName().equals(building.getUniqueTo())) {
-					text.append('\n').append(words(building.getName())).append(building.getReplaces() == null ? "" : ", their " + words(building.getReplaces()));
+					String does;
+					try {
+						does = UncivInfo.lines(building.getShortDescription(true, unique -> true)).replace("\n", "; ");
+					} catch (Throwable e) {
+						does = UncivInfo.rules(building.getUniques()).replace("\n", "; ");
+					}
+					text.append("\nBuilding: ").append(words(building.getName())).append('|').append(building.getReplaces() == null ? "" : words(building.getReplaces())).append('|').append(does);
 				}
 			}
 			for (var improvement : rules.getTileImprovements().values()) {
 				if (nation.getName().equals(improvement.getUniqueTo())) {
-					text.append('\n').append(words(improvement.getName())).append(", an improvement only they build");
+					String gives = words(improvement.cloneStats().toString());
+					String does = UncivInfo.rules(improvement.getUniques()).replace("\n", "; ");
+					text.append("\nImprovement: ").append(words(improvement.getName())).append("||").append(gives).append(gives.isEmpty() || does.isEmpty() ? "" : "; ").append(does);
 				}
 			}
 			out.add(new Records.Option(Names.color(nation, true), Names.color(nation, false), nation.getName(), text.toString(), 0));
@@ -1023,7 +1047,7 @@ public final class UncivLink implements GameLink {
 		for (Notification notification : new ArrayList<>(seat.civ.getNotifications())) {
 			// News of having gained nothing ("Received [0] Gold ...", as when a city is given back) is no news.
 			if (seat.told.put(notification, true) == null && !notification.getText().startsWith("Received [0] ")) {
-				changes.add(new WorldEvent.Notice(words(notification.getText()), null));
+				changes.add(notice(seat.civ, notification));
 			}
 		}
 		for (String text : seat.news) {
@@ -1034,6 +1058,43 @@ public final class UncivLink implements GameLink {
 			seat.told.keySet().retainAll(new java.util.HashSet<>(seat.civ.getNotifications()));
 		}
 		return changes;
+	}
+
+	/** A piece of the game's news, with where it happened and what sort of news it is, as far as the game says. */
+	private WorldEvent.Notice notice(Civilization civ, Notification notification) {
+		String kind = switch (notification.getCategory()) {
+			case Production -> "build";
+			case Cities -> "city";
+			case War -> "war";
+			case Diplomacy -> "talk";
+			case Trade -> "trade";
+			case Units -> "unit";
+			case Religion -> "faith";
+			case Espionage -> "spy";
+			default -> "news";
+		};
+		nl.jordythomassen.livingworld.coords.PlotCoord at = null;
+		try {
+			for (var action : notification.getActions()) {
+				String name = action.getClass().getSimpleName();
+				if (name.equals("TechAction")) {
+					kind = "tech";
+				} else if (name.equals("PolicyAction")) {
+					kind = "policy";
+				} else if (name.equals("DiplomacyAction") && kind.equals("news")) {
+					kind = "talk";
+				}
+				String field = name.equals("LocationAction") || name.equals("MapUnitAction") ? "location" : name.equals("CityAction") ? "city" : null;
+				com.unciv.logic.map.HexCoord hex = field == null || at != null ? null : Kt.field(action, field, com.unciv.logic.map.HexCoord.class);
+				if (hex != null) {
+					var tile = civ.getGameInfo().getTileMap().getOrNull(hex.getX(), hex.getY());
+					at = tile == null || snapshot == null ? null : snapshot.map().plot(tile);
+				}
+			}
+		} catch (Throwable e) {
+			// News without a place is still news.
+		}
+		return new WorldEvent.Notice(words(notification.getText()), at, kind);
 	}
 
 	/** Where in Unciv something went wrong: the first few frames, for the log. */
@@ -1050,7 +1111,8 @@ public final class UncivLink implements GameLink {
 	static String words(String text) {
 		String out;
 		try {
-			out = TranslationsKt.tr(text, true, false);
+			// (A note for whoever writes rule files, kept in the rule itself, is not for players.)
+			out = TranslationsKt.tr(text.replaceAll("\\s*<Suppress warning \\[[^\\]]*\\]>", ""), true, false);
 		} catch (Throwable e) {
 			out = text;
 		}

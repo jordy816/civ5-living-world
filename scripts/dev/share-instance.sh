@@ -7,7 +7,7 @@
 #                                       (and does not open a world of its own first): for the friends of one host
 set -euo pipefail
 here=$(cd "$(dirname "$0")/../.." && pwd)
-jar="$here/fabric/build/libs/civ5-living-world-0.1.0.jar"
+jar="$here/fabric/build/libs/civ5-living-world-$(sed -n 's/^version=//p' "$here/gradle.properties").jar"
 api=$(find "$HOME/.gradle/caches/modules-2" -name 'fabric-api-0.161.0+26.3.jar' | head -1)
 [ -f "$jar" ] && [ -n "$api" ] || { echo "build the mod first: ./gradlew :fabric:build" >&2; exit 1; }
 work=$(mktemp -d)

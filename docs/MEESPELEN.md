@@ -23,8 +23,10 @@ Het kost een kwartier, waarvan tien minuten downloaden.
    Quit to Title**. Dan **Multiplayer > Add Server**, vul het adres in dat je van de host
    kreeg, **Join Server**. (Kreeg je van de host een eigen zip die meteen naar zijn server
    gaat, dan sla je deze stap over.)
-5. Nog geen spel bezig? Dan zit je met de host aan dezelfde tafel: kies links een beschaving
-   (wijs er een aan om te lezen wat er bijzonder aan is). De host kiest de kaart en begint.
+5. Nog geen spel bezig? Dan zit je met de host aan dezelfde tafel. Eerst kiest de host de
+   kaart en de regels (stap 1, *The game*); jij ziet dat meegaan. Daarna (stap 2, *Who
+   plays*) kies je links een beschaving (wijs er een aan om te zien wat er bijzonder aan is)
+   en klik je **I am ready**. Is iedereen klaar, dan begint de host; je ziet een aftelling.
    Loopt er al een spel? Dan krijg je een lijst: neem een beschaving over die de computer
    speelt, regeer mee met iemand, of kijk alleen.
 
@@ -42,9 +44,15 @@ Het spel zelf is in het Engels. **F1** laat de muis en de toetsen zien.
   Ben je in oorlog met een andere speler, dan zetten jullie om de beurt en zegt de knop wie
   eerst mag.
 - **F12** zet je op de grond, in je eigen persoon; nog een keer F12 en je bent weer boven.
-  Te voet mag je alleen op je **eigen land** hakken en bouwen. Wat je daar verzamelt (hout,
+  Je wordt neergezet waar je muis staat, maar alleen op je **eigen land**; daarbuiten loop
+  je. Te voet mag je alleen op je eigen land hakken en bouwen. Wat je daar verzamelt (hout,
   graan, goud) breng je naar een stad: klik rechts op de gouverneur in de hal, *Deliver what
-  you carry*.
+  you carry*. Kom je dicht bij een vijandelijke eenheid, dan komen haar soldaten op je af:
+  elke die je verslaat kost die eenheid gezondheid. Ga je neer, dan sta je weer bij je
+  hoofdstad en kost het wat goud. Betere wapens koop je bij de gouverneur (*Arms for
+  yourself*).
+- Nieuws staat rechts als kleine plaatjes: **klik** erop om erheen te gaan, **rechtsklik**
+  om het weg te doen.
 - Je hoeft nergens iets te typen.
 
 Weggaan: **Esc > Disconnect**. Je beschaving blijft van jou; zolang je weg bent speelt de

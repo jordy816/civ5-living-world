@@ -11,6 +11,10 @@ Civ V Living World itself is MIT (see [LICENSE](LICENSE)).
 | [libGDX](https://libgdx.com) core classes (needed by Unciv) | Apache-2.0 | Unmodified; no backend, no natives |
 | androidx.collection and annotation classes, JetBrains annotations (needed by Unciv) | Apache-2.0 | Unmodified |
 
+The rule files for the Shoshone (`engine/src/main/resources/livingworld/rules`) are this
+project's own, written in Unciv's rule language and read on top of Unciv's rules the way
+Unciv reads a mod. Unciv's own files are carried as they are.
+
 ## Beside it, in the instance and the server pack
 
 | What | Licence |

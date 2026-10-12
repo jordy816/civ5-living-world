@@ -21,7 +21,7 @@ loom="$HOME/.gradle/caches/fabric-loom"
 case "${1:-}" in
 	start)
 		export JAVA_HOME=${JAVA_HOME:?point JAVA_HOME at a JDK 25}
-		jar="$root/fabric/build/libs/civ5-living-world-0.1.0.jar"
+		jar="$root/fabric/build/libs/civ5-living-world-$(sed -n 's/^version=//p' "$root/gradle.properties").jar"
 		api=$(find "$HOME/.gradle/caches/modules-2" -name 'fabric-api-0.161.0+26.3.jar' | head -1)
 		args="$root/fabric/build/loom-cache/argFiles/runClient"
 		[ -f "$jar" ] && [ -n "$api" ] && [ -f "$args" ] || { echo "build the mod and run the dev client once first" >&2; exit 1; }

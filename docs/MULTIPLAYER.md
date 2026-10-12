@@ -51,10 +51,20 @@ first player who came in does.
 
 ## Beginning a game together
 
-With no game in the world, everybody who comes in sits at the same table: each picks a
-civilization (two people cannot pick the same), whoever keeps the world sets the map and the
-rules and presses *Begin the game*. Everybody at the table gets a civilization of their own;
-the computer plays the others.
+With no game in the world, everybody who comes in sits at the same table. It has two steps,
+shown along the top of everybody's screen:
+
+1. **The game.** Whoever keeps the world (the ★ in the list) chooses the land and the rules;
+   the others see it take shape. *Next: who plays* opens the lobby.
+2. **Who plays.** Each picks a civilization (two people cannot pick the same) and presses
+   *I am ready*; the list shows a tick behind whoever is. The keeper presses *Begin the game*
+   (it says how many are not ready yet, and begins anyway if pressed), and everybody sees a
+   count of three. Somebody who is not ready after all, or the keeper pressing again, stops
+   the count. *Change the game* goes back to the first step, and everybody says ready anew.
+
+Everybody at the table gets a civilization of their own; the computer plays the others.
+People can come in during either step. Alone at the table there is nothing to wait for:
+*Next*, pick, *Begin*.
 
 ## Coming into a game that runs
 
