@@ -1,0 +1,36 @@
+// The bridge core: protocol, coordinates, state, commands and the Civ V link.
+// Plain Java, no Minecraft classes, so it can be tested and run without the game.
+plugins {
+	id 'java-library'
+	id 'application'
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	testImplementation platform("org.junit:junit-bom:5.11.4")
+	testImplementation "org.junit.jupiter:junit-jupiter"
+	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+	// A Lua 5.1 interpreter, to run the real Civ script against a fake game API in tests.
+	testImplementation "org.luaj:luaj-jse:2.0.3"
+}
+
+application {
+	mainClass = 'nl.jordythomassen.livingworld.cli.Main'
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 25
+	it.options.encoding = 'UTF-8'
+}
+
+test {
+	useJUnitPlatform()
+	testLogging { events "failed"; exceptionFormat "full" }
+}
+
+jar {
+	manifest { attributes 'Main-Class': 'nl.jordythomassen.livingworld.cli.Main' }
+}

@@ -1,0 +1,21 @@
+Civ V Living World - notices for what this jar contains besides its own (MIT) code
+==================================================================================
+
+Unciv 4.22.8  -  https://github.com/yairm210/Unciv
+  Licence: Mozilla Public License 2.0 (https://www.mozilla.org/MPL/2.0/)
+  In this jar: the classes under com/unciv and the rule files in
+  nl/jordythomassen/livingworld/unciv/unciv-rulesets.zip, unmodified, taken from the
+  project's release jar. The source is available at the address above, tag 4.22.8.
+  These files remain under the MPL-2.0.
+
+Kotlin standard library, kotlinx.coroutines  -  https://kotlinlang.org
+  Licence: Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)
+
+libGDX (core classes only)  -  https://libgdx.com
+  Licence: Apache License 2.0
+
+AndroidX collection and annotation  -  https://developer.android.com/jetpack/androidx
+  Licence: Apache License 2.0
+
+JetBrains annotations  -  https://github.com/JetBrains/java-annotations
+  Licence: Apache License 2.0

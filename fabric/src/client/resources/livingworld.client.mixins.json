@@ -1,0 +1,20 @@
+{
+  "required": true,
+  "package": "nl.jordythomassen.livingworld.mc.client.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "WorldOpenFlowsMixin",
+    "CameraMixin",
+    "EntityMixin",
+    "EntityRenderDispatcherMixin",
+    "EntityRendererMixin",
+    "ProjectionMixin",
+    "FogRendererMixin",
+    "HudMixin",
+    "LevelRendererMixin",
+    "MouseHandlerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

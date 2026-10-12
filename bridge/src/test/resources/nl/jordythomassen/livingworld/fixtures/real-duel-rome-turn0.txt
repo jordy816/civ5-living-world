@@ -1,0 +1,155 @@
+GenericWorldAnchor: LW	>	1
+GenericWorldAnchor: LW	S	1	75042368-3	40x24-1529176734-14--4000	0	0	0	40	24	1	6	11	76	1	1
+GenericWorldAnchor: LW	G	-1247.9992675781	-665.08514404297	-1184.0007324219	-665.08435058594	-1215.9992675781	-609.65954589844	-1247.9979248047	-554.23468017578
+GenericWorldAnchor: LW	N	L	107
+GenericWorldAnchor: LW	L	T	0	TERRAIN_GRASS	Grassland
+GenericWorldAnchor: LW	L	T	1	TERRAIN_PLAINS	Plains
+GenericWorldAnchor: LW	L	T	2	TERRAIN_DESERT	Desert
+GenericWorldAnchor: LW	L	T	3	TERRAIN_TUNDRA	Tundra
+GenericWorldAnchor: LW	L	T	4	TERRAIN_SNOW	Snow
+GenericWorldAnchor: LW	L	T	5	TERRAIN_COAST	Coast
+GenericWorldAnchor: LW	L	T	6	TERRAIN_OCEAN	Ocean
+GenericWorldAnchor: LW	L	T	7	TERRAIN_MOUNTAIN	Mountain
+GenericWorldAnchor: LW	L	T	8	TERRAIN_HILL	Hill
+GenericWorldAnchor: LW	L	F	0	FEATURE_ICE	Ice
+GenericWorldAnchor: LW	L	F	1	FEATURE_JUNGLE	Jungle
+GenericWorldAnchor: LW	L	F	2	FEATURE_MARSH	Marsh
+GenericWorldAnchor: LW	L	F	3	FEATURE_OASIS	Oasis
+GenericWorldAnchor: LW	L	F	4	FEATURE_FLOOD_PLAINS	Flood Plains
+GenericWorldAnchor: LW	L	F	5	FEATURE_FOREST	Forest
+GenericWorldAnchor: LW	L	F	6	FEATURE_FALLOUT	Fallout
+GenericWorldAnchor: LW	L	F	7	FEATURE_CRATER	The Barringer Crater
+GenericWorldAnchor: LW	L	F	8	FEATURE_FUJI	Mt. Fuji
+GenericWorldAnchor: LW	L	F	9	FEATURE_MESA	The Grand Mesa
+GenericWorldAnchor: LW	L	F	10	FEATURE_REEF	The Great Barrier Reef
+GenericWorldAnchor: LW	L	F	11	FEATURE_VOLCANO	Krakatoa
+GenericWorldAnchor: LW	L	F	12	FEATURE_GIBRALTAR	Rock of Gibraltar
+GenericWorldAnchor: LW	L	F	13	FEATURE_GEYSER	Old Faithful
+GenericWorldAnchor: LW	L	F	14	FEATURE_FOUNTAIN_YOUTH	Fountain of Youth
+GenericWorldAnchor: LW	L	F	15	FEATURE_POTOSI	Cerro de Potosi
+GenericWorldAnchor: LW	L	F	16	FEATURE_EL_DORADO	El Dorado
+GenericWorldAnchor: LW	L	F	17	FEATURE_ATOLL	Atoll
+GenericWorldAnchor: LW	L	F	18	FEATURE_SRI_PADA	Sri Pada
+GenericWorldAnchor: LW	L	F	19	FEATURE_MT_SINAI	Mt. Sinai
+GenericWorldAnchor: LW	L	F	20	FEATURE_MT_KAILASH	Mt. Kailash
+GenericWorldAnchor: LW	L	F	21	FEATURE_ULURU	Uluru
+GenericWorldAnchor: LW	L	F	22	FEATURE_LAKE_VICTORIA	Lake Victoria
+GenericWorldAnchor: LW	L	F	23	FEATURE_KILIMANJARO	Mt. Kilimanjaro
+GenericWorldAnchor: LW	L	F	24	FEATURE_SOLOMONS_MINES	King Solomon's Mines
+GenericWorldAnchor: LW	L	I	0	IMPROVEMENT_CITY_RUINS	City Ruins
+GenericWorldAnchor: LW	L	I	1	IMPROVEMENT_BARBARIAN_CAMP	Encampment
+GenericWorldAnchor: LW	L	I	2	IMPROVEMENT_GOODY_HUT	Ancient Ruins
+GenericWorldAnchor: LW	L	I	3	IMPROVEMENT_FARM	Farm
+GenericWorldAnchor: LW	L	I	4	IMPROVEMENT_MINE	Mine
+GenericWorldAnchor: LW	L	I	5	IMPROVEMENT_QUARRY	Quarry
+GenericWorldAnchor: LW	L	I	6	IMPROVEMENT_TRADING_POST	Trading Post
+GenericWorldAnchor: LW	L	I	7	IMPROVEMENT_LUMBERMILL	Lumber Mill
+GenericWorldAnchor: LW	L	I	8	IMPROVEMENT_PASTURE	Pasture
+GenericWorldAnchor: LW	L	I	9	IMPROVEMENT_FISHING_BOATS	Fishing Boats
+GenericWorldAnchor: LW	L	I	10	IMPROVEMENT_PLANTATION	Plantation
+GenericWorldAnchor: LW	L	I	11	IMPROVEMENT_CAMP	Camp
+GenericWorldAnchor: LW	L	I	12	IMPROVEMENT_WELL	Oil Well
+GenericWorldAnchor: LW	L	I	13	IMPROVEMENT_OFFSHORE_PLATFORM	Offshore Platform
+GenericWorldAnchor: LW	L	I	14	IMPROVEMENT_FORT	Fort
+GenericWorldAnchor: LW	L	I	15	IMPROVEMENT_LANDMARK	Landmark
+GenericWorldAnchor: LW	L	I	16	IMPROVEMENT_ACADEMY	Academy
+GenericWorldAnchor: LW	L	I	17	IMPROVEMENT_CUSTOMS_HOUSE	Customs House
+GenericWorldAnchor: LW	L	I	18	IMPROVEMENT_MANUFACTORY	Manufactory
+GenericWorldAnchor: LW	L	I	19	IMPROVEMENT_CITADEL	Citadel
+GenericWorldAnchor: LW	L	I	20	IMPROVEMENT_TERRACE_FARM	Terrace Farm
+GenericWorldAnchor: LW	L	I	21	IMPROVEMENT_MOAI	Moai
+GenericWorldAnchor: LW	L	I	22	IMPROVEMENT_HOLY_SITE	Holy Site
+GenericWorldAnchor: LW	L	I	23	IMPROVEMENT_POLDER	Polder
+GenericWorldAnchor: LW	L	I	24	IMPROVEMENT_ARCHAEOLOGICAL_DIG	Archaeological Dig
+GenericWorldAnchor: LW	L	I	25	IMPROVEMENT_BRAZILWOOD_CAMP	Brazilwood Camp
+GenericWorldAnchor: LW	L	I	26	IMPROVEMENT_KASBAH	Kasbah
+GenericWorldAnchor: LW	L	I	27	IMPROVEMENT_FEITORIA	Feitoria
+GenericWorldAnchor: LW	L	I	28	IMPROVEMENT_CHATEAU	Chateau
+GenericWorldAnchor: LW	L	R	0	RESOURCE_IRON	Iron
+GenericWorldAnchor: LW	L	R	1	RESOURCE_HORSE	Horses
+GenericWorldAnchor: LW	L	R	2	RESOURCE_COAL	Coal
+GenericWorldAnchor: LW	L	R	3	RESOURCE_OIL	Oil
+GenericWorldAnchor: LW	L	R	4	RESOURCE_ALUMINUM	Aluminum
+GenericWorldAnchor: LW	L	R	5	RESOURCE_URANIUM	Uranium
+GenericWorldAnchor: LW	L	R	6	RESOURCE_WHEAT	Wheat
+GenericWorldAnchor: LW	L	R	7	RESOURCE_COW	Cattle
+GenericWorldAnchor: LW	L	R	8	RESOURCE_SHEEP	Sheep
+GenericWorldAnchor: LW	L	R	9	RESOURCE_DEER	Deer
+GenericWorldAnchor: LW	L	R	10	RESOURCE_BANANA	Bananas
+GenericWorldAnchor: LW	L	R	11	RESOURCE_FISH	Fish
+GenericWorldAnchor: LW	L	R	12	RESOURCE_STONE	Stone
+GenericWorldAnchor: LW	L	R	13	RESOURCE_WHALE	Whales
+GenericWorldAnchor: LW	L	R	14	RESOURCE_PEARLS	Pearls
+GenericWorldAnchor: LW	L	R	15	RESOURCE_GOLD	Gold
+GenericWorldAnchor: LW	L	R	16	RESOURCE_SILVER	Silver
+GenericWorldAnchor: LW	L	R	17	RESOURCE_GEMS	Gems
+GenericWorldAnchor: LW	L	R	18	RESOURCE_MARBLE	Marble
+GenericWorldAnchor: LW	L	R	19	RESOURCE_IVORY	Ivory
+GenericWorldAnchor: LW	L	R	20	RESOURCE_FUR	Furs
+GenericWorldAnchor: LW	L	R	21	RESOURCE_DYE	Dyes
+GenericWorldAnchor: LW	L	R	22	RESOURCE_SPICES	Spices
+GenericWorldAnchor: LW	L	R	23	RESOURCE_SILK	Silk
+GenericWorldAnchor: LW	L	R	24	RESOURCE_SUGAR	Sugar
+GenericWorldAnchor: LW	L	R	25	RESOURCE_COTTON	Cotton
+GenericWorldAnchor: LW	L	R	26	RESOURCE_WINE	Wine
+GenericWorldAnchor: LW	L	R	27	RESOURCE_INCENSE	Incense
+GenericWorldAnchor: LW	L	R	28	RESOURCE_JEWELRY	Jewelry
+GenericWorldAnchor: LW	L	R	29	RESOURCE_PORCELAIN	Porcelain
+GenericWorldAnchor: LW	L	R	30	RESOURCE_COPPER	Copper
+GenericWorldAnchor: LW	L	R	31	RESOURCE_SALT	Salt
+GenericWorldAnchor: LW	L	R	32	RESOURCE_CRAB	Crab
+GenericWorldAnchor: LW	L	R	33	RESOURCE_TRUFFLES	Truffles
+GenericWorldAnchor: LW	L	R	34	RESOURCE_CITRUS	Citrus
+GenericWorldAnchor: LW	L	R	35	RESOURCE_ARTIFACTS	Antiquity Site
+GenericWorldAnchor: LW	L	R	36	RESOURCE_NUTMEG	Nutmeg
+GenericWorldAnchor: LW	L	R	37	RESOURCE_CLOVES	Cloves
+GenericWorldAnchor: LW	L	R	38	RESOURCE_PEPPER	Pepper
+GenericWorldAnchor: LW	L	R	39	RESOURCE_HIDDEN_ARTIFACTS	Hidden Antiquity Site
+GenericWorldAnchor: LW	L	R	40	RESOURCE_BISON	Bison
+GenericWorldAnchor: LW	L	R	41	RESOURCE_COCOA	Cocoa
+GenericWorldAnchor: LW	L	O	0	ROUTE_ROAD	Road
+GenericWorldAnchor: LW	L	O	1	ROUTE_RAILROAD	Railroad
+GenericWorldAnchor: LW	N	V	13
+GenericWorldAnchor: LW	V	0	0	CIVILIZATION_ROME	Rome	Roman	Augustus Caesar	41	4587638	15779584
+GenericWorldAnchor: LW	V	1	1		Unmet civilization	Unknown		1	8421504	4210752
+GenericWorldAnchor: LW	V	22	22		Unmet civilization	Unknown		3	8421504	4210752
+GenericWorldAnchor: LW	V	23	23		Unmet civilization	Unknown		3	8421504	4210752
+GenericWorldAnchor: LW	V	24	24		Unmet civilization	Unknown		3	8421504	4210752
+GenericWorldAnchor: LW	V	25	25		Unmet civilization	Unknown		3	8421504	4210752
+GenericWorldAnchor: LW	V	26	26		Unmet civilization	Unknown		3	8421504	4210752
+GenericWorldAnchor: LW	V	27	27		Unmet civilization	Unknown		3	8421504	4210752
+GenericWorldAnchor: LW	V	28	28		Unmet civilization	Unknown		3	8421504	4210752
+GenericWorldAnchor: LW	V	32	32		Unmet civilization	Unknown		3	8421504	4210752
+GenericWorldAnchor: LW	V	33	33		Unmet civilization	Unknown		3	8421504	4210752
+GenericWorldAnchor: LW	V	34	34		Unmet civilization	Unknown		3	8421504	4210752
+GenericWorldAnchor: LW	V	63	63	CIVILIZATION_BARBARIAN	Barbarians	Barbarian	Barbarian	53	0	12058624
+GenericWorldAnchor: LW	N	P	24
+GenericWorldAnchor: LW	P	0	0	?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?
+GenericWorldAnchor: LW	P	1	0	?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?
+GenericWorldAnchor: LW	P	2	0	?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?
+GenericWorldAnchor: LW	P	3	0	?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?
+GenericWorldAnchor: LW	P	4	0	?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?
+GenericWorldAnchor: LW	P	5	0	?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?
+GenericWorldAnchor: LW	P	6	0	?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?
+GenericWorldAnchor: LW	P	7	0	?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?
+GenericWorldAnchor: LW	P	8	0	?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?
+GenericWorldAnchor: LW	P	9	0	?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?
+GenericWorldAnchor: LW	P	10	0	?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?
+GenericWorldAnchor: LW	P	11	0	?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?
+GenericWorldAnchor: LW	P	12	0	?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?
+GenericWorldAnchor: LW	P	13	0	?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;0,-1,2,-1,-1,-1,-1,0,2;1,1,0,-1,-1,-1,-1,0,2;0,5,0,-1,-1,-1,-1,0,2;0,-1,0,-1,-1,-1,-1,0,2;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?
+GenericWorldAnchor: LW	P	14	0	?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;1,-1,0,-1,-1,31,-1,3,2;1,-1,1,0,-1,-1,-1,0,2;0,-1,0,0,-1,-1,-1,0,2;1,5,0,-1,-1,-1,-1,0,2;1,5,1,-1,-1,-1,-1,0,2;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?
+GenericWorldAnchor: LW	P	15	0	?;?;?;?;?;?;?;?;?;?;?;?;?;?;2,-1,1,-1,-1,-1,-1,0,2;2,-1,0,-1,-1,-1,-1,0,2;1,-1,0,0,-1,-1,-1,2,2;2,-1,0,0,-1,-1,0,7,6;2,-1,1,0,-1,-1,-1,0,2;1,-1,1,-1,-1,-1,-1,0,2;1,-1,1,-1,-1,-1,-1,0,2;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?
+GenericWorldAnchor: LW	P	16	0	?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;2,-1,0,-1,-1,-1,-1,0,2;2,-1,0,0,-1,-1,-1,0,2;2,4,0,0,-1,-1,-1,3,2;1,-1,0,-1,-1,-1,-1,0,2;1,-1,0,-1,-1,-1,-1,0,2;1,5,0,-1,-1,9,-1,0,2;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?
+GenericWorldAnchor: LW	P	17	0	?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;0,-1,0,-1,-1,-1,-1,0,2;0,-1,0,-1,-1,18,-1,0,2;0,5,0,-1,-1,-1,-1,3,2;0,-1,0,-1,-1,-1,-1,0,2;0,5,0,-1,-1,-1,-1,0,2;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?
+GenericWorldAnchor: LW	P	18	0	?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;0,-1,0,-1,-1,-1,-1,0,0;0,5,0,-1,-1,9,-1,0,0;2,4,0,-1,-1,-1,-1,3,2;2,4,0,-1,-1,-1,-1,0,2;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?
+GenericWorldAnchor: LW	P	19	0	?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?
+GenericWorldAnchor: LW	P	20	0	?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?
+GenericWorldAnchor: LW	P	21	0	?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?
+GenericWorldAnchor: LW	P	22	0	?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?
+GenericWorldAnchor: LW	P	23	0	?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?;?
+GenericWorldAnchor: LW	N	U	1
+GenericWorldAnchor: LW	U	0	16385	UNIT_WARRIOR	Warrior	19	16	100	100	0	120	8	0	DOMAIN_LAND	1	0	4
+GenericWorldAnchor: LW	N	T	1
+GenericWorldAnchor: LW	T	0	8192	Rome	17	15	1	65	200	200	BUILDING_MONUMENT	Monument	10	40	8	0	15	10
+GenericWorldAnchor: LW	<	1	153

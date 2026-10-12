@@ -1,0 +1,17 @@
+-- Starts the small test game from the main menu: Rome on a duel-size Pangaea, lowest difficulty.
+-- Run in the "MainMenu" state. Does not touch the player's saved "Play Now" settings.
+PreGame.SetPrivateGame(false)
+PreGame.SetGameType(GameTypes.GAME_SINGLE_PLAYER)
+PreGame.ResetSlots()
+PreGame.ResetGameOptions()
+PreGame.ResetMapOptions()
+PreGame.SetPersistSettings(false)
+PreGame.SetEra(0)
+PreGame.SetRandomMapScript(false)
+PreGame.SetWorldSize(GameInfo.Worlds.WORLDSIZE_DUEL.ID)
+PreGame.SetCivilization(0, GameInfo.Civilizations.CIVILIZATION_ROME.ID)
+PreGame.SetGameSpeed(GameInfo.GameSpeeds.GAMESPEED_STANDARD.ID)
+PreGame.SetHandicap(0, GameInfo.HandicapInfos.HANDICAP_SETTLER.ID)
+PreGame.SetMapScript("Assets\\Maps\\Pangaea.lua")
+print("civ=" .. tostring(PreGame.GetCivilization(0)) .. " world=" .. tostring(PreGame.GetWorldSize()) .. " map=" .. tostring(PreGame.GetMapScript()))
+Events.SerialEventStartGame()

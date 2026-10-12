@@ -1,0 +1,42 @@
+// The game itself: Unciv's rules and AI (an open-source remake of Civilization V, MPL-2.0), run inside
+// this JVM without its window, and the adapter that shows one of its games as the state the Minecraft
+// side renders. Plain Java, no Minecraft classes: whole games are played in the tests.
+plugins {
+	id 'java-library'
+}
+
+def uncivVersion = '4.22.8'
+def engineJar = rootProject.file("libs/unciv-engine-${uncivVersion}.jar")
+def rulesetsZip = rootProject.file("libs/unciv-rulesets-${uncivVersion}.zip")
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	api project(':bridge')
+	// Fetched and cut down by scripts/dev/fetch-unciv.sh.
+	api files(engineJar)
+	testImplementation platform("org.junit:junit-bom:5.11.4")
+	testImplementation "org.junit.jupiter:junit-jupiter"
+	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+}
+
+// The rule files travel inside our jar and are unpacked next to the game at first use.
+processResources {
+	from(rulesetsZip) {
+		rename { 'unciv-rulesets.zip' }
+		into 'nl/jordythomassen/livingworld/unciv'
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 25
+	it.options.encoding = 'UTF-8'
+}
+
+test {
+	useJUnitPlatform()
+	maxHeapSize = '1g'
+	testLogging { events "failed"; exceptionFormat "full" }
+}

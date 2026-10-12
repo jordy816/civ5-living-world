@@ -1,0 +1,81 @@
+plugins {
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+}
+
+base {
+	archivesName = 'civ5-living-world'
+}
+
+loom {
+	splitEnvironmentSourceSets()
+
+	runs {
+		client {
+			// For a look at the real thing on a machine without a screen (xvfb): small heap, the debug driver on.
+			vmArgs "-Xmx2500M", "-Dlivingworld.debug=true", "-Dlivingworld.rts.distance=${System.getProperty('livingworld.rts.distance', '10')}", "-Dlivingworld.edgepan=${System.getProperty('livingworld.edgepan', 'false')}", "-Dlivingworld.rts.zoomfree=${System.getProperty('livingworld.rts.zoomfree', 'false')}", "-Dlivingworld.debug.fail=${System.getProperty('livingworld.debug.fail', 'false')}", "-Dlivingworld.game.seed=21", "-Dlivingworld.game.mapSize=Tiny", "-Dlivingworld.game.nation=Rome"
+		}
+		server {
+			// A headless check on a machine without a screen: the built-in mock game, small heap.
+			// -Dlivingworld.selftest=true checks the built-in game; add -Dlivingworld.mock=true for the older checks of the Civilization V link.
+			vmArgs "-Xmx1500M", "-Dlivingworld.civ.mock=${System.getProperty('livingworld.mock', 'false')}",
+				"-Dlivingworld.selftest=${System.getProperty('livingworld.selftest', 'false')}", "-Dlivingworld.game.seed=21", "-Dlivingworld.game.mapSize=Tiny", "-Dlivingworld.game.nation=Rome"
+		}
+	}
+
+	mods {
+		"livingworld" {
+			sourceSet sourceSets.main
+			sourceSet sourceSets.client
+		}
+	}
+}
+
+// The bridge core and the engine adapter are compiled straight into the mod jar: one file to install, no nested jars.
+sourceSets.main.java.srcDir "../bridge/src/main/java"
+sourceSets.main.resources.srcDir "../bridge/src/main/resources"
+sourceSets.main.java.srcDir "../engine/src/main/java"
+
+// The game engine itself (Unciv, MPL-2.0; fetched and cut down by scripts/dev/fetch-unciv.sh) travels inside the mod jar too.
+def uncivVersion = '4.22.8'
+def engineJar = rootProject.file("libs/unciv-engine-${uncivVersion}.jar")
+def rulesetsZip = rootProject.file("libs/unciv-rulesets-${uncivVersion}.zip")
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	implementation files(engineJar)
+}
+
+jar {
+	from(zipTree(engineJar)) {
+		exclude 'META-INF/MANIFEST.MF'
+	}
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+processResources {
+	def version = project.version
+	inputs.property "version", version
+	filesMatching("fabric.mod.json") {
+		expand "version": version
+	}
+	from(rulesetsZip) {
+		rename { 'unciv-rulesets.zip' }
+		into 'nl/jordythomassen/livingworld/unciv'
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 25
+	it.options.encoding = 'UTF-8'
+}
+
+// The self-test checks painting from nothing: give it an empty world each time.
+tasks.matching { it.name == 'runServer' }.configureEach {
+	doFirst {
+		if (System.getProperty('livingworld.selftest', 'false') == 'true') {
+			project.delete "run/selftest"
+		}
+	}
+}

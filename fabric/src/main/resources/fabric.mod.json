@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "livingworld",
+  "version": "${version}",
+  "name": "Civ V Living World",
+  "description": "Civilization, played inside Minecraft: the rules and rivals of Civilization V (through Unciv), the map as a world of hexes, cities of blocks.",
+  "authors": ["Jordy Thomassen"],
+  "contact": {
+    "homepage": "https://github.com/jordy816/civ5-living-world",
+    "sources": "https://github.com/jordy816/civ5-living-world",
+    "issues": "https://github.com/jordy816/civ5-living-world/issues"
+  },
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["nl.jordythomassen.livingworld.mc.LivingWorldMod"],
+    "client": ["nl.jordythomassen.livingworld.mc.client.LivingWorldClient"]
+  },
+  "mixins": [
+    "livingworld.mixins.json",
+    { "config": "livingworld.client.mixins.json", "environment": "client" }
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "minecraft": "~26.3",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}

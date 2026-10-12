@@ -1,0 +1,11 @@
+.gradle/
+build/
+*/build/
+fabric/run/
+*.class
+dist/
+.idea/
+*.iml
+libs/
+fabric/run-prod/
+fabric/run-prod2/
