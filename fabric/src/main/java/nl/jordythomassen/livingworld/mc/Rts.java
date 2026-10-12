@@ -358,6 +358,20 @@ final class Rts {
 				return;
 			}
 			case "hello" -> {
+				// The player's game says which version it is (one before 0.2.2 says nothing). The picture of the game is
+				// written differently from version to version: with another one the view from above stays empty. A line
+				// in the chat about it is hidden behind the mod's own screens, so the player is shown the door, with on
+				// it what to do: that screen cannot be missed.
+				String theirs = act.text();
+				String ours = LivingWorldMod.version();
+				if (!theirs.equals(ours)) {
+					LivingWorldMod.LOG.warn("Living World: {} joined with version {} of the mod, this server has {}: not let in", player.getName().getString(),
+						theirs.isEmpty() ? "before 0.2.2" : theirs, ours);
+					player.connection.disconnect(net.minecraft.network.chat.Component.literal("This server runs Civ V Living World " + ours + ".\nYour game has "
+						+ (theirs.isEmpty() ? "an older version" : theirs) + ".\n\nEverybody in a game needs the same version.\nGet " + ours + " at " + LivingWorldMod.RELEASES
+						+ "\n(replace the jar in your instance's mods folder, or import the new zip)\nand join again."));
+					return;
+				}
 				// The player's game is ready for pictures; whoever rules a built-in game starts above the land.
 				sendState(player);
 				boolean asked = session.lobby.hello(player);

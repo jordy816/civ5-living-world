@@ -111,6 +111,16 @@ the view from above.
 
 - **"Outdated client" or "Outdated server"**: host and guest have different Minecraft
   versions. The mod is for 26.3 only.
+- **"This server runs Civ V Living World 0.2.2. Your game has ..."** on the screen you are
+  sent back to: host and guest have different versions of the mod, and the server lets in only
+  its own. Take the version it names from the releases, replace the jar in the instance's
+  `mods` folder (or import the new zip), and join again. (A server from before 0.2.2 cannot
+  say so: with an older game on it the view from above just stays empty, and
+  `logs/latest.log` has *could not read the view*.)
+- **A host who updates the server**: tell the guests first, and update your own game before
+  the server. Whoever joins with another version is told so on that screen.
+
+  ![The screen a game of another version is sent back to](img/version-mismatch.png)
 - **You joined and see an ordinary Minecraft world**: the server's world was made before
   `level-type=livingworld\:board` was set. Stop the server, move the `world` folder away,
   start it again.

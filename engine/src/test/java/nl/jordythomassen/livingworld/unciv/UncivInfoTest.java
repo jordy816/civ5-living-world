@@ -243,7 +243,9 @@ class UncivInfoTest {
 		List<Records.Option> people = ask(link, "greatPeople", 0, 0);
 		described("greatPeople", people, byType(ask(link, "about:greatPeople", 0, 0)));
 		int units = link.state().units().size();
-		CommandTicket chosen = send(link, CommandOp.CHOICE, new EntityKey(me, -1), null, 0, "great:" + people.get(0).type());
+		// (Not the Admiral: he needs water by the capital, which this land does not promise. The game says so, rightly.)
+		Records.Option one = people.stream().filter(o -> !o.type().contains("ADMIRAL")).findFirst().orElseThrow();
+		CommandTicket chosen = send(link, CommandOp.CHOICE, new EntityKey(me, -1), null, 0, "great:" + one.type());
 		assertEquals(CommandStatus.CONFIRMED, chosen.status(), chosen.detail());
 		assertEquals(units + 1, link.state().units().size());
 		assertTrue(ask(link, "greatPeople", 0, 0).isEmpty(), "and that was the one");

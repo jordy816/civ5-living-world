@@ -204,7 +204,7 @@ public final class RtsClient {
 			reset();
 			inWorld = true;
 			if (ClientPlayNetworking.canSend(Net.Act.TYPE)) {
-				act("hello", 0, 0, 0, 0, "");
+				act("hello", 0, 0, 0, 0, LivingWorldMod.version());
 			}
 		});
 		// Leaving a world is tidied up by the tick below, on the game's own thread: the news of a disconnection can come
@@ -278,6 +278,7 @@ public final class RtsClient {
 	}
 
 	private static void reset() {
+		toldMismatch = false;
 		enabled = false;
 		seeFar(false);
 		RtsCamera.setActive(false);
@@ -583,8 +584,21 @@ public final class RtsClient {
 			}
 		} catch (IOException | RuntimeException e) {
 			LivingWorldMod.LOG.warn("Living World: could not read the view", e);
+			Minecraft minecraft = Minecraft.getInstance();
+			if (!toldMismatch && minecraft.getConnection() != null && !minecraft.hasSingleplayerServer()) {
+				// What the server sends cannot be read: it is of another version than this game (an older one: a newer one
+				// would have said so itself). Nothing from above would work here, so the player is taken out, to a screen
+				// that says why and what to do.
+				toldMismatch = true;
+				minecraft.getConnection().getConnection().disconnect(net.minecraft.network.chat.Component.literal("This server runs another version of Civ V Living World than your game ("
+					+ LivingWorldMod.version() + ").\n\nEverybody in a game needs the same version.\nAsk the host to update the server, or get the server's version at\n"
+					+ LivingWorldMod.RELEASES));
+			}
 		}
 	}
+
+	/** Whether the player was told that this game and the server are of different versions (once a world). */
+	private static boolean toldMismatch;
 
 	private static void setEnabled(boolean on) {
 		enabled = on;

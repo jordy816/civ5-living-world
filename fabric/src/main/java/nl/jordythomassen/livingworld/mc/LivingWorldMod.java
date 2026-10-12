@@ -32,6 +32,13 @@ import org.slf4j.LoggerFactory;
 
 public final class LivingWorldMod implements ModInitializer {
 	public static final String MOD_ID = "livingworld";
+	/** Where anybody gets the mod, said to a player whose game and server are not of one version. */
+	public static final String RELEASES = "github.com/jordy816/civ5-living-world/releases";
+
+	/** This build's version ("0.2.2"), as the mod's own description has it. */
+	public static String version() {
+		return net.fabricmc.loader.api.FabricLoader.getInstance().getModContainer(MOD_ID).map(mod -> mod.getMetadata().getVersion().getFriendlyString()).orElse("?");
+	}
 	/** The tag every figure this mod puts in the world carries (see {@link Summon#TAG}). */
 	public static final String FIGURE_TAG = Summon.TAG;
 	public static final String WORLD_NAME = "Civ V Living World";

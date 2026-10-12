@@ -448,27 +448,33 @@ class UncivLinkTest {
 		// The capital is founded at once, so no wandering Settler can be lost to barbarians; then the
 		// computer plays the player's turns for a good while: cities grow, build, and more are founded.
 		// The computer's players do not play the same game twice, and now and then one of them takes the
-		// player's last city long before the end: that game says nothing about a long one, so another is played.
+		// player's last city long before the end, or leaves them one city that falls a few turns on: such a game says
+		// nothing about a long one, so another is played.
 		UncivLink played = null;
 		WorldState reached = null;
-		for (long seed = 21; seed < 24; seed++) {
+		for (long seed = 21; seed < 26; seed++) {
 			Path folder = java.nio.file.Files.createDirectories(dir.resolve("game" + seed));
 			played = link(folder, seed);
 			UnitState settler = played.state().units().values().stream().filter(u -> u.type().equals("UNIT_SETTLER")).findFirst().orElseThrow();
 			assertEquals(CommandStatus.CONFIRMED, send(played, CommandOp.UNIT_ACTION, settler.key(), null, 0, "FoundCity").status());
 			played.simulate(150);
 			played.pump();
-			reached = played.state();
-			if (reached.turn() == 150) {
+			WorldState now = played.state();
+			int viewer = now.session().viewer();
+			long cities = now.cities().values().stream().filter(c -> c.key().owner() == viewer).count();
+			reached = now;
+			if (now.turn() == 150 && cities >= 2) {
 				break;
 			}
-			System.out.println("the player's civilization fell at turn " + reached.turn() + " (seed " + seed + "): another game is played");
-			played.stop();
+			System.out.println("the player's civilization fell at turn " + now.turn() + " or was down to " + cities + " cities (seed " + seed + "): another game is played");
+			if (seed < 25) {
+				played.stop();
+			}
 		}
 		UncivLink link = played;
 		WorldState state = reached;
 		int me = state.session().viewer();
-		assertEquals(150, state.turn(), "one game of three is played to its end");
+		assertEquals(150, state.turn(), "one game of five is played to its end");
 		List<nl.jordythomassen.livingworld.state.CityState> mine = state.cities().values().stream().filter(c -> c.key().owner() == me).toList();
 		assertFalse(mine.isEmpty(), "the player's civilization has cities");
 		assertTrue(mine.stream().anyMatch(c -> c.buildings().size() >= 4), "and they have built: " + mine.stream().map(c -> c.name() + c.buildings()).toList());
