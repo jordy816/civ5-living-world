@@ -113,6 +113,70 @@ class UncivRulerTest {
 		assertTrue(polynesia.contains("\nImprovement: Moai||"), polynesia);
 	}
 
+	/**
+	 * Writes what the game itself knows of every civilization and every unit to engine/build/docs: the page of
+	 * civilizations as it stands in docs/CIVILIZATIONS.md, and the units as a table that scripts/dev/units-page.sh
+	 * turns into docs/UNITS.md (it adds which of Minecraft's creatures each is, which this module does not know).
+	 */
+	@Test
+	void theCivilizationsAndTheUnitsAreWrittenDownFromTheRules(@TempDir Path dir) throws IOException {
+		UncivLink link = link(dir, "Rome", 21L);
+		List<Records.Option> nations = new java.util.ArrayList<>(ask(link, "nations", 0, 0));
+		nations.sort(java.util.Comparator.comparing(o -> o.type().replaceFirst("^The ", "")));
+		StringBuilder page = new StringBuilder("# The civilizations\n\n"
+			+ "Every civilization a game can be played with: who leads it, its gift, and what only its people build or\n"
+			+ "train. They are those of Civilization V and Gods & Kings as [Unciv](https://github.com/yairm210/Unciv) has\n"
+			+ "them, and one this mod adds: the Shoshone. At the table where a game is set up you see the same, one at\n"
+			+ "a time; here they are side by side.\n\n"
+			+ "This page is written by the game itself (`./gradlew :engine:test` writes `engine/build/docs/CIVILIZATIONS.md`\n"
+			+ "from the rules it plays by), so it says what the game does, in the game's own words.\n\n"
+			+ "| Civilization | Leader | Gift | Only theirs |\n|---|---|---|---|\n");
+		StringBuilder each = new StringBuilder();
+		for (Records.Option nation : nations) {
+			String[] lines = nation.name().split("\n");
+			String gift = lines[1].substring("Gift: ".length());
+			List<String> theirs = new java.util.ArrayList<>();
+			StringBuilder points = new StringBuilder();
+			StringBuilder own = new StringBuilder();
+			for (int i = 2; i < lines.length; i++) {
+				if (lines[i].startsWith("- ")) {
+					points.append("- ").append(lines[i].substring(2)).append("\n");
+				} else {
+					int colon = lines[i].indexOf(": ");
+					String[] parts = lines[i].substring(colon + 2).split("\\|", -1);
+					theirs.add(parts[0]);
+					own.append("| **").append(parts[0]).append("** | ").append(lines[i], 0, colon).append(parts[1].isEmpty() ? "" : ", their " + parts[1]).append(" | ")
+						.append(parts[2].replace("; ", " · ")).append(" |\n");
+				}
+			}
+			String anchor = nation.type().toLowerCase(java.util.Locale.ROOT).replace(' ', '-');
+			page.append("| [").append(nation.type()).append("](#").append(anchor).append(") | ").append(lines[0]).append(" | ").append(gift).append(" | ").append(String.join(", ", theirs))
+				.append(" |\n");
+			each.append("\n## ").append(nation.type()).append("\n\nLed by **").append(lines[0]).append("**. Their gift: **").append(gift).append("**.\n\n").append(points);
+			if (own.length() > 0) {
+				each.append("\n| Only theirs | What it is | In numbers, and what it does |\n|---|---|---|\n").append(own);
+			}
+		}
+		Path docs = Path.of("build", "docs");
+		java.nio.file.Files.createDirectories(docs);
+		java.nio.file.Files.writeString(docs.resolve("CIVILIZATIONS.md"), page.append(each).toString());
+		assertTrue(nations.size() >= 27 && page.indexOf("## The Shoshone") > 0, "all of them, the Shoshone among them");
+
+		// The units, a line each: name, key, strength, ranged strength, range, movement, cost, technology, its column and era, domain, whose, instead of what, soldier, great person.
+		var rules = link.game().getRuleset();
+		StringBuilder units = new StringBuilder();
+		for (var unit : rules.getUnits().values()) {
+			var tech = unit.getRequiredTech() == null ? null : rules.getTechnologies().get(unit.getRequiredTech());
+			units.append(String.join("\t", unit.getName(), "UNIT_" + Names.key(unit.getName()), Integer.toString(unit.getStrength()), Integer.toString(unit.getRangedStrength()),
+				Integer.toString(unit.getRange()), Integer.toString(unit.getMovement()), Integer.toString(unit.getCost()), tech == null ? "" : tech.getName(),
+				tech == null ? "-1" : Integer.toString(tech.getColumn().getColumnNumber()), tech == null ? "" : tech.era(),
+				unit.isWaterUnit() ? "DOMAIN_SEA" : unit.isAirUnit() ? "DOMAIN_AIR" : "DOMAIN_LAND", unit.getUniqueTo() == null ? "" : unit.getUniqueTo(),
+				unit.getReplaces() == null ? "" : unit.getReplaces(), unit.isMilitary() ? "1" : "0", unit.isGreatPerson() ? "1" : "0")).append('\n');
+		}
+		java.nio.file.Files.writeString(docs.resolve("units.tsv"), units.toString());
+		assertTrue(units.indexOf("Pathfinder\tUNIT_PATHFINDER\t8\t") >= 0, "the units, the Shoshone's among them");
+	}
+
 	@Test
 	void aCitySheetCountsDownWhatIsBuilt(@TempDir Path dir) throws IOException {
 		UncivLink link = link(dir, "Rome", 21L);

@@ -165,7 +165,7 @@ public final class Looks {
 		if (has(t, "CAMEL")) {
 			return riding(person(barbarian ? "pillager" : "skeleton", "bow"), "camel");
 		}
-		if (has(t, "HORSE", "CHARIOT", "KNIGHT", "CAVALRY", "LANCER", "HUSSAR", "COSSACK", "CONQUISTADOR", "MANDEKALU", "KESHIK", "SIPAHI", "CATAPHRACT", "COMPANION")) {
+		if (has(t, "HORSE", "CHARIOT", "KNIGHT", "CAVALRY", "LANCER", "HUSSAR", "COSSACK", "CONQUISTADOR", "MANDEKALU", "KESHIK", "SIPAHI", "CATAPHRACT", "COMPANION", "COMANCHE")) {
 			if (barbarian) {
 				return riding(person("vindicator", "iron_axe"), "horse");
 			}
@@ -183,7 +183,7 @@ public final class Looks {
 			return might <= 8 ? person("skeleton", "bow") : might <= 13 ? person("stray", "bow") : might <= 20 ? person("bogged", "bow") : person("piglin", "crossbow");
 		}
 		// And those who fight hand to hand.
-		if (has(t, "SCOUT", "EXPLORER")) {
+		if (has(t, "SCOUT", "EXPLORER", "PATHFINDER")) {
 			return creature("wolf", "", 1.3);
 		}
 		if (barbarian) {
@@ -228,7 +228,7 @@ public final class Looks {
 		if (has(t, "SETTLER")) {
 			return "campfire";
 		}
-		if (has(t, "SCOUT", "EXPLORER")) {
+		if (has(t, "SCOUT", "EXPLORER", "PATHFINDER")) {
 			return "spyglass";
 		}
 		if (has(t, "CARAVAN", "CARGO")) {

@@ -5,7 +5,9 @@ seen from above as in a strategy game, with your units and cities standing in it
 the other civilizations are those of Civilization V, as rebuilt by the open-source game
 [Unciv](https://github.com/yairm210/Unciv), which runs inside the mod.
 
-What has been tried, and how, is in [TESTING.md](TESTING.md).
+What has been tried, and how, is in [TESTING.md](TESTING.md). New to it? [FIRST_GAME.md](FIRST_GAME.md)
+walks through a first evening. Every civilization is in [CIVILIZATIONS.md](CIVILIZATIONS.md),
+every unit and the creature it is in [UNITS.md](UNITS.md).
 
 ![Rome, just founded, seen from above](img/rts-city.png)
 

@@ -122,7 +122,9 @@ A ruler in person, new in 0.2.0 and so the least played part:
   better arms. No person has fought them yet: expect the numbers to change.
 - **The Shoshone** have their wide borders, their strength on their own land, the Pathfinder
   and the Comanche Riders. The Pathfinder does not choose what it finds in a ruin (Unciv has
-  no rule for that).
+  no rule for that). In the releases up to 0.2.2 the Pathfinder looks like a Warrior (a
+  zombie) and the Comanche Riders go on foot; in the source they are a wolf and a rider, as
+  [UNITS.md](UNITS.md) has them.
 - **The sounds have been measured, not heard.** The machines the client is tested on have no
   sound card, so the game's sound engine was made to write to a file, and the file looked at:
   a bell when a city is founded, a hammer for a building, a long chime for a wonder, a soft

@@ -4,7 +4,7 @@
 
 | Level | What it is | Run with |
 |---|---|---|
-| Unit and contract tests (123) | The engine plays real games through the same interface the mod uses: a game from the first Settler to an empire, a 150-turn game, war and peace, deals the computer accepts and refuses, a religion, a city taken by assault, air and nuclear strikes, a game won and one lost, saving and loading, a game for several people with its order of moves, the civilization this mod adds, a city as a sheet whose turns count down, news with its place and kind, a ruler's strikes and their limits. The board is checked block by block: rivers, borders, cities of every age, wonders on their own hex | `./gradlew :bridge:test :engine:test` |
+| Unit and contract tests (124) | The engine plays real games through the same interface the mod uses: a game from the first Settler to an empire, a 150-turn game, war and peace, deals the computer accepts and refuses, a religion, a city taken by assault, air and nuclear strikes, a game won and one lost, saving and loading, a game for several people with its order of moves, the civilization this mod adds, a city as a sheet whose turns count down, news with its place and kind, a ruler's strikes and their limits. The board is checked block by block: rivers, borders, cities of every age, wonders on their own hex | `./gradlew :bridge:test :engine:test` |
 | Server self-test (63 checks) | A real Minecraft server without players: a game is started, drawn and played through the code a player's clicks reach (select, found, research, build, buy, end the turn, a pantheon, a deal), a stand-in player digs and delivers, is set down on their own land only, is met by the soldiers of a barbarian unit (one beaten: 20 health off the unit), falls and is carried home, trains; a blast is held to its maker's land; a second game is started in the same world, and a game for two is played for a turn. Also run on Windows 11 | `./gradlew :fabric:runServer -Dlivingworld.selftest=true --args=nogui` |
 | The real client, real mouse and keys | The unchanged game with the built jar, on a virtual screen with software rendering: every list, page and tree of the view from above clicked, long games played by keys alone, walking, digging on one's own land and being refused outside it, logs felled and carried to a city; the table in its two steps, every kind of map's sketch, a piece of news clicked; F12 where the pointer is and, pointing beyond the border, on one's own land; soldiers of an enemy unit that killed the ruler, the respawn before the capital, and three soldiers beaten one after the other; training bought | `scripts/dev/prod-client.sh` |
 | Two clients, one server | Two real clients against a dedicated server, one of them on a second machine (Windows): the table for two, a civilization each, a turn in which one waits for the other, war and the order of moves that comes with it, a kept game gone back to | by hand |
@@ -14,6 +14,14 @@
 
 What that leaves open is in [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md). The pictures in
 this repository are the real client, most of them from the virtual screen (854 by 480).
+
+## Pages the game writes itself
+
+[CIVILIZATIONS.md](CIVILIZATIONS.md) and [UNITS.md](UNITS.md) are not written by hand:
+`./gradlew :engine:test` writes every civilization and every unit from the rules the game
+plays by (`engine/build/docs`), and `scripts/dev/units-page.sh` adds to each unit the creature
+of Minecraft the mod shows it as and puts both pages in `docs/`. Run it after a change to the
+rules or to who is who.
 
 ## Looking without starting Minecraft
 
